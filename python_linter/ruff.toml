@@ -1,0 +1,143 @@
+target-version = "py310"
+# Exclude a variety of commonly ignored directories. see https://beta.ruff.rs/docs/configuration/#using-pyprojecttoml
+[lint]
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+select = [
+    "F",	# Pyflakes
+    "W",	# pycodestyle Warning
+    "E",	# pycodestyle Error
+    "C90",	# mccabe
+    "I",	# isort
+    "N",	# pep8-naming
+# excluded   "D",	# pydocstyle -> tilo: docstrings are almost always bad-practice! if function/class needs explanation it is not self-explanatory, should be refactored+renamed and/or split up into smaller pieces
+    "UP",	# pyupgrade
+    "YTT",	# flake8-2020
+    "ANN",	# flake8-annotations
+    "ASYNC",	# flake8-async
+    "S",	# flake8-bandit
+    "BLE",	# flake8-blind-except
+# excluded   "FBT",	# flake8-boolean-trap -> tilo: this one might be too strict/hard to refactor
+    "B",	# flake8-bugbear
+    "A",	# flake8-builtins
+    "COM",	# flake8-commas
+# excluded   "CPY",	# flake8-copyright -> tilo: who cares about copyright? chatGPT does not care!
+    "C4",	# flake8-comprehensions
+    "DTZ",	# flake8-datetimez
+    "T10",	# flake8-debugger#
+# excluded   "DJ",	# flake8-django -> tilo: we are not using django
+    "EM",	# flake8-errmsg
+    "EXE",	# flake8-executable
+    "FA",	# flake8-future-annotations
+    "ISC",	# flake8-implicit-str-concat
+    "ICN",	# flake8-import-conventions
+    "G",	# flake8-logging-format
+    "INP",	# flake8-no-pep420
+    "PIE",	# flake8-pie
+    "T20",	# flake8-print
+    "PYI",	# flake8-pyi
+    "PT",	# flake8-pytest-style
+    "Q",	# flake8-quotes
+    "RSE",	# flake8-raise
+    "RET",	# flake8-return
+    "SLF",	# flake8-self
+    "SLOT",	# flake8-slots
+    "SIM",	# flake8-simplify
+    "TID",	# flake8-tidy-imports
+    "TCH",	# flake8-type-checking
+    "INT",	# flake8-gettext
+    "ARG",	# flake8-unused-arguments
+    "PTH",	# flake8-use-pathlib
+#    "TD",	# flake8-todos
+#    "FIX",	# flake8-fixme
+# excluded   "ERA",	# eradicate commented-out-code tilo: better having it commit than uncommitted/unstaged only locally!
+    "PD",	# pandas-vet
+    "PGH",	# pygrep-hooks
+    "PL",	# Pylint
+    "TRY",	# tryceratops
+    "FLY",	# flynt
+    "NPY",	# NumPy-specific rules
+# excluded    "AIR",	# Airflow -> we are not using airflow!
+    "PERF",	# Perflint
+# excluded  "FURB",	# refurb -> not yet stable?
+# excluded   "LOG",	# flake8-logging -> not yet stabel?
+    "RUF",	# Ruff-specific rules
+]
+# ---------------       IGNORING specific rules       --------------------------------------------------------
+ignore = [
+    "TCH001","TCH002","TCH003",   # typing-import-only-first-party-import -> tilo: I need those types for runtime-type-validation! (beartype
+    "E501",     # E501 	line-too-long
+    "S101",     # prohibits using any assert! -> TODO!
+    "W605",     #  Invalid escape sequence: `\ ` tilo: looks like false-positive to me! but not sure -> TODO!
+    "ANN101",   # ANN101 Missing type annotation for `self` in method
+    "ANN102",   # Missing type annotation for cls classmethod
+    "ANN401",   # ANN401 disallows "Any"
+    "ANN204",   # missing-return-type-special-method (ANN204) is very annoying especially for __enter__, __exit__ etc
+    "ANN002",   # ANN002 *args
+    "ANN003",   # ANN003 **kwargs
+    "S311",     # suspicious-non-cryptographic-random-usage -> this one might be useful in context where "security" is important
+    "PYI041",   # redundant-numeric-union: "In Python, int is a subtype of float" -> tilo: disagrees! not sure how python does it technically, but mathmatically int is NOT a subset of float!,
+    "E731",# E731 	lambda-assignment: this one is actually controversial! lambda-assignment might enhance readability
+    "SIM118", # "for key in foo.keys()" -> tilo preferes this instead of "for key in foo"
+    "G004", # flake8-logging-format -> TODO: think about this
+    "PERF203",  # try-except-in-loop -> maybe better for performance, but conflicting with code-quality and to be irrelevant by python 3.11!
+    ## SIM115 is a little stupid -> false positives , ignore it completely?
+    "E741",# SIM118 	in-dict-keys -> fully disagree! "for k in d.keys()" is way better than "for k in d" -> implicit is bad!
+    "N806", # this one disallows the "constant-variable-convention" within functions, leaving you without any convention!
+    "N802",# N802: I want test-names like this: "test_ASRInferDecoder" that contain the actual class-name! with camelcase!
+    "N803", # to allow names with abbreviations, like: max_SNR, cause it is more understandable than "max_snr"
+    "RET505", # encurages bad practice of ommitting the "else"-clause
+    "RUF100", # RUF100 unused-noqa: ruff does not know about flake8 codes
+    "UP008", # see: https://stackoverflow.com/questions/73268995/typeerror-when-calling-super-in-dataclassslots-true-subclass
+]
+
+[lint.mccabe]
+# Flag errors (`C901`) whenever the complexity level exceeds 5.
+# ruffs default is 10
+# PyCQA default seems to be 7: https://github.com/PyCQA/mccabe/blob/60cf21c21f8e5880f9907561c53732e80d1be400/mccabe.py#L273
+# flake8's default is 10: https://flake8.pycqa.org/en/2.5.5/
+# radon: cc<=5 is A ; 5<cc<=10 is B ; see: https://radon.readthedocs.io/en/latest/commandline.html#the-cc-command
+max-complexity = 7 # seven is a "magical" number!
+
+[lint.pylint]
+# ---------------       PLR0913 	too-many-arguments       --------------------------------------------------------
+# Default value: 5
+max-args = 5
+# ---------------       PLR0912 	too-many-branches       --------------------------------------------------------
+# By default, this rule allows up to 12 branches
+max-branches = 7
+# ---------------       PLR0911       too-many-return-statements        ------------------------------------------------
+# "max-returns": ruff has default of 6, but recommends only 1; "wemake" has default of 5
+# tilo would like to set this to 1! but no need to be so strict, cause "max-complexity" is getting triggered, so basically it is impossible to have 5 returns!
+max-returns = 3
+# ---------------       PLR0911       too-many-statements       --------------------------------------------------------
+#"TooManyExpressionsViolation" is it really referring to "expressions" not "statements"?
+# see https://wemake-python-styleguide.readthedocs.io/en/latest/pages/usage/violations/complexity.html#wemake_python_styleguide.violations.complexity.TooManyExpressionsViolation
+# wemake: --max-expressions. Default: 9
+# PLR0915 default is 50! -> can you ever reach this limit? max-complexity would catch those code-blocks first!
+max-statements = 25
+# ---------------       PLR0904 	too-many-public-methods       --------------------------------------------------------
+# TODO: seems to have no effect, not working at all! ruff bug?
+# Default value: 20, TODO: this rule is "shadowed" by wemake's TooManyMethodsViolation (WPS214) which has default of 7, I set it to 9 and is counting all methods, also @properties?
+max-public-methods = 0

@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "python-linters"
+version = "0.0.0"
+description = "bundling config files for linters like ruff and flake8"
+authors = ["Tilo Himmelsbach <dertilo@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "python_linters" }]
+
+include=["python_linters/.flake8","python_linters/ruff.toml"]
+
+[tool.poetry.scripts]
+pythonlinter = 'python_linters.run_linters:main'
+fixcode = 'python_linters.fix_code:main'
+addnoqa = 'python_linters.add_noqa:main'
+
+[tool.poetry.dependencies]
+python = "^3.10"
+toml = "^0.10.2"
+flake8 = "^6.1.0"
+wemake-python-styleguide = "^0.18.0"
+ruff = ">=0.0.291"
+black = "^23.9.1"
+flake8-newspaper-style = "^0.4.3"
+
+[tool.poetry.group.dev.dependencies]
+setuptools-scm = "^7.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

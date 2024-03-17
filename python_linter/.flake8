@@ -1,0 +1,53 @@
+[flake8]
+per-file-ignores=
+exclude=
+ignore = B
+select = WPS200,WPS202,WPS204,WPS214,WPS219,WPS227,WPS228,WPS229,WPS230,WPS231,WPS232,WPS233,WPS236,WPS425,WPS449, NEW
+
+# --- WPS: Complexity Violations by "wemake-python-styleguide" ---
+# see https://wemake-python-styleguide.readthedocs.io/en/latest/pages/usage/violations/complexity.html#complexity
+
+# WPS200: JonesScoreViolation -> this is a median of "LineComplexity", default is 12
+max-jones-score= 12
+# EXCLUDED WPS201: TooManyImportsViolation, default is 12, make no sense for heavy type-annotation usage, many types need to be imported
+# WPS202: TooManyModuleMembersViolation default is 7
+max-module-members=9
+# EXCLUDED WPS203: TooManyImportedNamesViolation, excluded because its not super necessary!
+# WPS204: OverusedExpressionViolation
+# EXCLUDED WPS210: TooManyLocalsViolation, has default of 5 which is too low, it encourages complex lines and is bad for readability!
+#max-local-variables=7
+# EXCLUDED WPS211: TooManyArgumentsViolation -> this one is already covered by "PLR0913"
+# EXCLUDED WPS212: TooManyReturnsViolation -> this one is already covered by "PLR0911"
+### WPS213: TooManyExpressionsViolation -> this one is already covered by "PLR0915"
+# WPS214: TooManyMethodsViolation, "wemake-default" is 7!
+max-methods=9
+# WPS219: TooDeepAccessViolation, Default: 4, tilo: even 3 is a lot!
+max-access-level=3
+#  EXCLUDED WPS221: LineComplexityViolation, "wemake-default" is 14 -> this is not properly working for annotations!
+##max-line-complexity=14
+#  EXCLUDED WPS226: OverusedStringViolation -> sure that this isn't already in ruff? -> eigenverantwortung here?
+# WPS227: TooLongOutputTupleViolation
+# WPS228: TooLongCompareViolation -> already covered by WPS221?
+# WPS229: TooLongTryBodyViolation: default is at 1!!
+max-try-body-length=3
+# WPS230: TooManyPublicAttributesViolation, default is 6!
+max-attributes=6
+# WPS231: CognitiveComplexityViolation, wemake-default is 12, melevir's is 7
+max-cognitive-score=12
+# WPS232: CognitiveModuleComplexityViolation, default is 8
+max-cognitive-average=8
+# WPS233: TooLongCallChainViolation
+# WPS236: TooLongTupleUnpackViolation: "If you have more than 2 values in a tuple, consider using typing.NamedTuple or a dataclass instead." rather than unpacking third-party returns you should directly "pipe" into a dataclass
+max-tuple-unpack-length=4
+# WPS425 — Forbid booleans as non-keyword parameters.
+# WPS449 — Forbid float keys.
+# NEW https://github.com/mobility-university/flake8-newspaper-style
+# TMN002: TODO(tilo): maybe incorporate some of this packages logic into the linter?: essentially prohibiting tuples, see: flake8-too-many
+# max-function-return-values=3
+
+
+# H601: cohesion; see:  https://github.com/sasanjac/flake8-cohesion, default is 50!! seems to have some multiprocessing issues! cannot run in cicd!
+## cohesion makes not really sense for small classes, that only have one attribute
+# cohesion-below = 60.0
+# cohesion-strict = true
+
