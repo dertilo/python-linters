@@ -1,4 +1,4 @@
-# python-linter
+# python-linters
 - bundles flake8, black, isort, ruff into a single poetry-script
 - project independent linter configuration (via `ruff.toml`,`.flake8`) -> one config to rule them all
 ### use-cases:
@@ -19,9 +19,9 @@ python-linters = { version = "<some-version-here>" }
          { include = "my_package_name" }, 
      ]
      ```
-   b. or via `tool.python-linter`
+   b. or via `tool.python-linters`
     ```toml
-    [tool.python-linter]
+    [tool.python-linters]
     folders_to_be_linted=["my_directory","another_dir/my_sub_package"]
     ```
 ## 2. local development workflow (before pushing to ci-pipeline)

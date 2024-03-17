@@ -40,9 +40,9 @@ packages = [
     { include = \"my_package_name\" },
 ]
 
-b. or via tool.python-linter
+b. or via tool.python-linters
 
-[tool.python-linter]
+[tool.python-linters]
 folders_to_be_linted=["my_directory","another_dir/my_sub_package"]"""
         super().__init__(msg)
 
@@ -56,7 +56,7 @@ def get_folders_to_be_linted(pyproject_toml: str) -> list[str]:
     with open(pyproject_toml) as f:
         t = toml.load(f)
         folders = (
-            t.get("tool", {}).get("python-linter", {}).get("folders_to_be_linted", None)
+            t.get("tool", {}).get("python-linters", {}).get("folders_to_be_linted", None)
         )
         if (
             folders is None
