@@ -2,7 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from python_linter.run_linters import RUFF_CONFIG_FILE, get_folders_to_be_linted
+from python_linters.run_linters import RUFF_CONFIG_FILE, get_folders_to_be_linted
 
 
 def run_cmd(cmd):

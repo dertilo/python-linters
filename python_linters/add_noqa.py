@@ -1,6 +1,6 @@
 import os
 
-from python_linter.run_linters import (
+from python_linters.run_linters import (
     RUFF_CONFIG_FILE,
     get_folders_to_be_linted,
     run_cmd,
