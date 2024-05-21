@@ -4,7 +4,6 @@ version = "0.0.0"
 description = "bundling config files for linters like ruff and flake8"
 authors = ["Tilo Himmelsbach <dertilo@gmail.com>"]
 readme = "README.md"
-homepage = "https://github.com/dertilo/python-linters"
 repository = "https://github.com/dertilo/python-linters"
 packages = [{ include = "python_linters" }]
 

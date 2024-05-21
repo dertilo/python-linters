@@ -1,4 +1,6 @@
 target-version = "py310"
+[lint.isort]
+profile = "black"
 # Exclude a variety of commonly ignored directories. see https://beta.ruff.rs/docs/configuration/#using-pyprojecttoml
 [lint]
 exclude = [
@@ -110,10 +112,12 @@ ignore = [
     "RET505", # encurages bad practice of ommitting the "else"-clause
     "RUF100", # RUF100 unused-noqa: ruff does not know about flake8 codes
     "UP008", # see: https://stackoverflow.com/questions/73268995/typeerror-when-calling-super-in-dataclassslots-true-subclass
+    "RET506", # looks like a false-positive
+    "SLF001", # everybody knows about the _-conventin, if one still accesses "protected" attributes one has their reasons!
 ]
 
 [lint.mccabe]
-# Flag errors (`C901`) whenever the complexity level exceeds 5.
+# Flag errors (`C901`) whenever the complexity level exceeds some threshold.
 # ruffs default is 10
 # PyCQA default seems to be 7: https://github.com/PyCQA/mccabe/blob/60cf21c21f8e5880f9907561c53732e80d1be400/mccabe.py#L273
 # flake8's default is 10: https://flake8.pycqa.org/en/2.5.5/
