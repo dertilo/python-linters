@@ -1,6 +1,4 @@
 target-version = "py310"
-[lint.isort]
-profile = "black"
 # Exclude a variety of commonly ignored directories. see https://beta.ruff.rs/docs/configuration/#using-pyprojecttoml
 [lint]
 exclude = [
