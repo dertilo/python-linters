@@ -1,6 +1,14 @@
 target-version = "py310"
 # Exclude a variety of commonly ignored directories. see https://beta.ruff.rs/docs/configuration/#using-pyprojecttoml
 [lint]
+preview = true
+extend-safe-fixes = ["ALL"] # yolo
+extend-unsafe-fixes=[
+    "T20", # don't remove prints
+    "FURB140" # starmap slower than comprehension in 3.12
+]
+
+
 exclude = [
     ".bzr",
     ".direnv",
@@ -36,6 +44,7 @@ select = [
     "YTT",	# flake8-2020
     "ANN",	# flake8-annotations
     "ASYNC",	# flake8-async
+    "TRIO",	# flake8-trio
     "S",	# flake8-bandit
     "BLE",	# flake8-blind-except
 # excluded   "FBT",	# flake8-boolean-trap -> tilo: this one might be too strict/hard to refactor
@@ -52,6 +61,7 @@ select = [
     "FA",	# flake8-future-annotations
     "ISC",	# flake8-implicit-str-concat
     "ICN",	# flake8-import-conventions
+    "LOG",	# flake8-logging
     "G",	# flake8-logging-format
     "INP",	# flake8-no-pep420
     "PIE",	# flake8-pie
@@ -75,13 +85,16 @@ select = [
     "PD",	# pandas-vet
     "PGH",	# pygrep-hooks
     "PL",	# Pylint
+    "C",	# Convention
+    "E",	# Error
+    "R",	# Refactor
+    "W",	# Warning
     "TRY",	# tryceratops
     "FLY",	# flynt
     "NPY",	# NumPy-specific rules
 # excluded    "AIR",	# Airflow -> we are not using airflow!
     "PERF",	# Perflint
-# excluded  "FURB",	# refurb -> not yet stable?
-# excluded   "LOG",	# flake8-logging -> not yet stabel?
+    "FURB",	# refurb
     "RUF",	# Ruff-specific rules
 ]
 # ---------------       IGNORING specific rules       --------------------------------------------------------
@@ -112,6 +125,7 @@ ignore = [
     "UP008", # see: https://stackoverflow.com/questions/73268995/typeerror-when-calling-super-in-dataclassslots-true-subclass
     "RET506", # looks like a false-positive
     "SLF001", # everybody knows about the _-conventin, if one still accesses "protected" attributes one has their reasons!
+    "FURB140",  # starmap slower than comprehension in 3.12
 ]
 
 [lint.mccabe]
@@ -140,6 +154,5 @@ max-returns = 3
 # PLR0915 default is 50! -> can you ever reach this limit? max-complexity would catch those code-blocks first!
 max-statements = 25
 # ---------------       PLR0904 	too-many-public-methods       --------------------------------------------------------
-# TODO: seems to have no effect, not working at all! ruff bug?
-# Default value: 20, TODO: this rule is "shadowed" by wemake's TooManyMethodsViolation (WPS214) which has default of 7, I set it to 9 and is counting all methods, also @properties?
-max-public-methods = 0
+# Default value: 20, wemake's TooManyMethodsViolation (WPS214) has default of 7
+max-public-methods = 20 # is not only counting public but all methods!

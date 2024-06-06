@@ -6,8 +6,7 @@ authors = ["Tilo Himmelsbach <dertilo@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/dertilo/python-linters"
 packages = [{ include = "python_linters" }]
-
-include=["python_linters/.flake8","python_linters/ruff.toml"]
+license = "MIT"
 
 [tool.poetry.scripts]
 pythonlinter = 'python_linters.run_linters:main'
@@ -22,6 +21,7 @@ wemake-python-styleguide = "^0.18.0"
 ruff = ">=0.0.291"
 black = "^23.9.1"
 flake8-newspaper-style = "^0.4.3"
+basedpyright = "^1.12.5"
 
 [tool.poetry.group.dev.dependencies]
 setuptools-scm = "^7.1.0"

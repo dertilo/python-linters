@@ -1,77 +1,13 @@
-import pathlib
 import subprocess
 import sys
 
-import toml
+from python_linters.config_files import FLAKE8_CONFIG_FILE, PYRIGHT_CONFIG_FILE
+from python_linters.extending_ruff_toml import create_extended_ruff_toml
+from python_linters.getting_to_be_linted_folders import get_folders_to_be_linted
 
 
-# TODO: one could brute-force search all files and replace codes, but is there a more elegant way?
-# def replace_noqa_code():
-#     >> > import re
-#     >> > l = {'NORTH': 'N', 'SOUTH': 'S', 'EAST': 'E', 'WEST': 'W'}
-#     >> > pattern = '|'.join(sorted(re.escape(k) for k in l))
-#     >> > address = "123 north anywhere street"
-#     >> > re.sub(pattern, lambda m: l.get(m.group(0).upper()), address,
-#                 flags=re.IGNORECASE)
-#     '123 N anywhere street'
-#     >> >
-#
 def run_cmd(cmd: str) -> int:
     return subprocess.call(cmd, stdout=sys.stdout, stderr=sys.stdout, shell=True)
-
-
-package_dir = str(pathlib.Path(__file__).parent.resolve())
-
-FLAKE8_CONFIG_FILE = f"{package_dir}/.flake8"
-RUFF_CONFIG_FILE = f"{package_dir}/ruff.toml"
-assert pathlib.Path(FLAKE8_CONFIG_FILE).is_file()
-assert pathlib.Path(RUFF_CONFIG_FILE).is_file()
-
-RUFF_ARGS = ["--fix", "--add-noqa"]
-
-
-class PackagesOrFoldersToBeLintedAreNotProperlyDefined(Exception):  # noqa: N818
-    def __init__(self) -> None:
-        sys.tracebacklimit = -1
-        msg = """in your pyproject.toml specify the directories that you want to be linted
-a. via packages
-
-packages = [
-    { include = \"my_package_name\" },
-]
-
-b. or via tool.python-linters
-
-[tool.python-linters]
-folders_to_be_linted=["my_directory","another_dir/my_sub_package"]"""
-        super().__init__(msg)
-
-
-def get_folders_to_be_linted(pyproject_toml: str) -> list[str]:
-    if not pathlib.Path(pyproject_toml).is_file():
-        raise FileNotFoundError(
-            f"pyproject.toml not found in {pathlib.Path.cwd()}\nplease run this script from the root of your project",
-        )
-
-    with open(pyproject_toml) as f:
-        t = toml.load(f)
-        folders = (
-            t.get("tool", {}).get("python-linters", {}).get("folders_to_be_linted", None)
-        )
-        if (
-            folders is None
-            and (packages := t.get("tool", {}).get("poetry", {}).get("packages", None))
-            is not None
-        ):
-            folders = [p["include"] for p in packages]
-            if pathlib.Path(f"{pathlib.Path(pyproject_toml).parent}/tests").is_dir():
-                folders += ["tests"]
-
-        if folders is None:
-            raise PackagesOrFoldersToBeLintedAreNotProperlyDefined
-    assert len(folders) > 0
-    print(f"found following {folders=}")
-    return folders
 
 
 class LinterException(Exception):
@@ -81,13 +17,14 @@ class LinterException(Exception):
 
 
 NAME2LINTER = {
-    "black": lambda folders_tobelinted: f"black --check {' '.join(folders_tobelinted)}",
-    "ruff": lambda folders_tobelinted: f"poetry run ruff check {' '.join(folders_tobelinted)} --config={RUFF_CONFIG_FILE}",
+    "ruff-format": lambda folders_tobelinted: f"ruff format --check {' '.join(folders_tobelinted)}",
+    "ruff": lambda folders_tobelinted: f"poetry run ruff check {' '.join(folders_tobelinted)} --config={create_extended_ruff_toml()}",
+    "basedpyright": lambda folders_tobelinted: f"cp -n {PYRIGHT_CONFIG_FILE} ./ && poetry run basedpyright {' '.join(folders_tobelinted)} --gitlabcodequality report.json --level $(cat pyrightlevel.txt 2>/dev/null || echo 'warning')",
     "flake8": lambda folders_tobelinted: f"poetry run flake8 --config={FLAKE8_CONFIG_FILE} {' '.join(folders_tobelinted)}",
 }
 
 
-def main():
+def main() -> None:
     folders_tobelinted = get_folders_to_be_linted("pyproject.toml")
     print(f"linter-order: {'->'.join(NAME2LINTER.keys())}")
     sys.stdout.flush()

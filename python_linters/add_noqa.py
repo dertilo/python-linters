@@ -1,13 +1,11 @@
 import os
 
-from python_linters.run_linters import (
-    RUFF_CONFIG_FILE,
-    get_folders_to_be_linted,
-    run_cmd,
-)
+from python_linters.extending_ruff_toml import create_extended_ruff_toml
+from python_linters.getting_to_be_linted_folders import get_folders_to_be_linted
+from python_linters.run_linters import run_cmd
 
 
-def main():
+def main() -> None:
     """
     expects to run from $ContentRoot$
     """
@@ -18,14 +16,14 @@ def main():
     ):  # theoretically could be necessary to run this loop as long as code changes!
         print(f"addnoqa iteration: {k}")
         run_cmd(
-            f"poetry run ruff check {' '.join(folders_tobelinted)} --config={RUFF_CONFIG_FILE} --add-noqa",
+            f"ruff check {' '.join(folders_tobelinted)} --config={create_extended_ruff_toml()} --add-noqa",
         )
         try:
-            run_cmd(f"black --check {' '.join(folders_tobelinted)}")
+            run_cmd(f"ruff format --check {' '.join(folders_tobelinted)}")
             break
         except Exception:
-            run_cmd(f"black {' '.join(folders_tobelinted)}")
-            run_cmd(f"poetry run fixcode {os.getcwd()}")
+            run_cmd(f"ruff format {' '.join(folders_tobelinted)}")
+            run_cmd(f"fixcode {os.getcwd()}")
 
 
 if __name__ == "__main__":

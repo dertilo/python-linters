@@ -10,9 +10,7 @@ if __name__ == "__main__":
         )
         return code, f"{short_expl}: {long_expl}"
 
-    with open("python_linter_configs/ruff_rules.txt") as f:
-        code_desc = (
-            parse_line(l) for l in f.readlines() if pattern.match(l) is not None
-        )
+    with open("python_linter_configs/ruff_rules.txt", encoding="locale") as f:
+        code_desc = (parse_line(l) for l in f if pattern.match(l) is not None)
         code2desc = dict(code_desc)
     print(code2desc)
