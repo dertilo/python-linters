@@ -24,6 +24,7 @@ package_dir = str(pathlib.Path(__file__).parent.resolve())
 
 FLAKE8_CONFIG_FILE = f"{package_dir}/.flake8"
 RUFF_CONFIG_FILE = f"{package_dir}/ruff.toml"
+PYRIGHT_CONFIG_FILE = f"{package_dir}/pyrightconfig.json"
 assert pathlib.Path(FLAKE8_CONFIG_FILE).is_file()
 assert pathlib.Path(RUFF_CONFIG_FILE).is_file()
 
@@ -83,6 +84,7 @@ class LinterException(Exception):
 NAME2LINTER = {
     "black": lambda folders_tobelinted: f"black --check {' '.join(folders_tobelinted)}",
     "ruff": lambda folders_tobelinted: f"poetry run ruff check {' '.join(folders_tobelinted)} --config={RUFF_CONFIG_FILE}",
+    "basedpyright": lambda folders_tobelinted: f"cp -n {PYRIGHT_CONFIG_FILE} ./ && poetry run basedpyright {' '.join(folders_tobelinted)} --level $(cat pyrightlevel.txt 2>/dev/null || echo 'warning')",
     "flake8": lambda folders_tobelinted: f"poetry run flake8 --config={FLAKE8_CONFIG_FILE} {' '.join(folders_tobelinted)}",
 }
 
