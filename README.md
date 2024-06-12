@@ -2,7 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![bear-ified](https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg)](https://beartype.readthedocs.io)
 # python-linters
-- bundles flake8, black, isort, ruff into a single poetry-script
+- bundles flake8, ruff and basedpyright into a single poetry-script
 - project independent linter configuration (via `ruff.toml`,`.flake8`) -> one config to rule them all
 ### use-cases:
 1. interactively learning python code quality standards via ruff+flake8, see [local development workflow](#2-local-development-workflow-before-pushing-to-ci-pipeline)

@@ -1,5 +1,5 @@
 {
-  "typeCheckingMode": "all",
+  "typeCheckingMode": "basic", // basic to ease transition, this entire config is (automatically copypasted and) to be adapted to each project
   "reportAny": false,
   "reportImplicitOverride": false,
   // cause typing.override leads to false positives

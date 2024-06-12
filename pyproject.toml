@@ -6,8 +6,7 @@ authors = ["Tilo Himmelsbach <dertilo@gmail.com>"]
 readme = "README.md"
 repository = "https://github.com/dertilo/python-linters"
 packages = [{ include = "python_linters" }]
-
-include=["python_linters/.flake8","python_linters/ruff.toml"]
+license = "MIT"
 
 [tool.poetry.scripts]
 pythonlinter = 'python_linters.run_linters:main'
