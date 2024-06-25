@@ -3,7 +3,10 @@ target-version = "py310"
 [lint]
 preview = true
 extend-safe-fixes = ["ALL"] # yolo
-extend-unsafe-fixes=["T20"]
+extend-unsafe-fixes=[
+    "T20", # don't remove prints
+    "FURB140" # starmap slower than comprehension in 3.12
+]
 
 
 exclude = [
@@ -122,6 +125,7 @@ ignore = [
     "UP008", # see: https://stackoverflow.com/questions/73268995/typeerror-when-calling-super-in-dataclassslots-true-subclass
     "RET506", # looks like a false-positive
     "SLF001", # everybody knows about the _-conventin, if one still accesses "protected" attributes one has their reasons!
+    "FURB140",  # starmap slower than comprehension in 3.12
 ]
 
 [lint.mccabe]
@@ -151,4 +155,4 @@ max-returns = 3
 max-statements = 25
 # ---------------       PLR0904 	too-many-public-methods       --------------------------------------------------------
 # Default value: 20, wemake's TooManyMethodsViolation (WPS214) has default of 7
-max-public-methods = 7
+max-public-methods = 20 # is not only counting public but all methods!
