@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-from python_linters.config_files import FLAKE8_CONFIG_FILE, PYRIGHT_CONFIG_FILE
+from python_linters.config_files import PYRIGHT_CONFIG_FILE
 from python_linters.extending_ruff_toml import create_extended_ruff_toml
 from python_linters.getting_to_be_linted_folders import get_folders_to_be_linted
 
@@ -20,7 +20,9 @@ NAME2LINTER = {
     "ruff-format": lambda folders_tobelinted: f"ruff format --check {' '.join(folders_tobelinted)}",
     "ruff": lambda folders_tobelinted: f"poetry run ruff check {' '.join(folders_tobelinted)} --config={create_extended_ruff_toml()}",
     "basedpyright": lambda folders_tobelinted: f"cp -n {PYRIGHT_CONFIG_FILE} ./ && poetry run basedpyright {' '.join(folders_tobelinted)} --gitlabcodequality report.json --level $(cat pyrightlevel.txt 2>/dev/null || echo 'warning')",
-    "flake8": lambda folders_tobelinted: f"poetry run flake8 --config={FLAKE8_CONFIG_FILE} {' '.join(folders_tobelinted)}",
+    # most flake8 linters are already included in ruff
+    # the news-paper-style function ordering rule is currently only enforced by a flake8 plugin but its not that important
+    # "flake8": lambda folders_tobelinted: f"poetry run flake8 --config={FLAKE8_CONFIG_FILE} {' '.join(folders_tobelinted)}",
 }
 
 
