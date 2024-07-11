@@ -7,6 +7,21 @@
 ### use-cases:
 1. interactively learning python code quality standards via ruff+flake8, see [local development workflow](#2-local-development-workflow-before-pushing-to-ci-pipeline)
 2. enforcing minimal quality-standards via a "lint-stage" in a ci-pipeline, see [setup for ci-pipeline](#3-setup-for-ci-pipeline)
+## 0. motivation: 
+### Python is a Bicycle!
+- initial idea of python: `Bridge the gap between the shell and C.`[see](https://www.artima.com/articles/pythons-design-goals)
+![img.png](images/python_is_a_bicycle.png)
+### run-time "safety"
+- type and data validation at runtime
+- pytests run your code -> runtime
+![img.png](images/runtime_safety.png)
+### lint-time "safety"
+- linting and static type checking
+![img.png](images/lint_time_safety.png)
+- flake8 already fell down!
+### more "safety" via shorter feed-back loops
+![img_3.png](images/feedback_loops.png)
+
 
 ## 1. install (via poetry)
 1. in `pyproject.toml` add to dependencies
@@ -59,7 +74,7 @@ cond9 --> | complains | cond47{{"ruff"}}:::style0
 cond47 --> | complains | op51[\"poetry run addnoqa"/]:::style1
 op51 -->  sub53[\"refactor your code \nOR\n keep/add noqa-comment"/]:::style1
 sub53 --> op2
-cond47 --> | is happy | cond58{{"flake8"}}:::style0
+cond47 --> | is happy | cond58{{"pyright"}}:::style0
 cond58 --> | complains | sub53
 cond58 --> | is happy | sub66["git commit"]
 sub66 -->  sub80
@@ -113,19 +128,6 @@ All done! ✨ 🍰 ✨
 folders_to_be_linted=['whisper_streaming', 'tests']
 ```
 
-### pythonlinter black is not happy
-```commandline
-poetry run pythonlinter
-linter-order: black->ruff->flake8
-folders_tobelinted=['whisper_streaming', 'tests']
-running black
-would reformat <somehwere>/whisper-streaming/whisper_streaming/post_asr_preparations.py
-would reformat <somehwere>/whisper-streaming/whisper_streaming/faster_whisper_inference/faster_whisper_inferencer.py
-
-Oh no! 💥 💔 💥
-2 files would be reformatted, 20 files would be left unchanged.
-python_linters.run_linters.LinterException: 💩 black is not happy! 💩
-```
 ### pythonlinter ruff is not happy
 - complains about
   - an unused argument
@@ -146,27 +148,6 @@ Found 4 errors.
 No fixes available (2 hidden fixes can be enabled with the `--unsafe-fixes` option).
 python_linters.run_linters.LinterException: 💩 ruff is not happy! 💩
 ```
-### pythonlinter flake8 is not happy
-- complains about too many methods in a class and wrong position of a function in a module
-```commandline
-poetry run pythonlinter
-linter-order: black->ruff->flake8
-folders_tobelinted=['whisper_streaming', 'tests']
-running black
-All done! ✨ 🍰 ✨
-22 files would be left unchanged.
-
-passed black linter! ✨ 🍰 ✨
-
-running ruff
-
-passed ruff linter! ✨ 🍰 ✨
-
-running flake8
-whisper_streaming/faster_whisper_inference/faster_whisper_inferencer.py:111:1: WPS214 Found too many methods: 10 > 9
-tests/conftest.py:35:8: NEW100 newspaper style: function is_in_docker_container defined in line 16 should be moved down
-python_linters.run_linters.LinterException: 💩 flake8 is not happy! 💩
-```
 ### addnoqa example
 - only shows how many noqas it added (`3`) and how many files it left unchanged (`22`)
 ```commandline
@@ -179,10 +160,8 @@ addnoqa iteration: 0
 ```
 - it adds noqas like this one:
 ```python
-def foobar(x):
+def foobar(x): # noqa: ANN001, ANN202
    return "whatever"
-
-from faster_whisper.transcribe import Segment as FasterWhisperSegment  # noqa: E402
 
 ```
 # IDE integration
