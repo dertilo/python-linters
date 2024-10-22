@@ -18,6 +18,7 @@ python = "^3.10"
 toml = "^0.10.2"
 ruff = ">=0.0.291"
 basedpyright = "^1.12.5"
+json-with-comments = "^1.2.9"
 
 [tool.poetry.group.dev.dependencies]
 setuptools-scm = "^7.1.0"

@@ -17,5 +17,9 @@
   "reportUnknownArgumentType": "warning",
   "reportMissingTypeArgument": "warning",
   "reportUnknownParameterType": "warning",
-  "reportUnusedVariable": "warning"
+  "reportUnusedVariable": "warning",
+    "exclude": [
+      "**/___*",
+      "tests"
+  ]
 }

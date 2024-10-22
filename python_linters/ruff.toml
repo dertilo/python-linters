@@ -126,6 +126,7 @@ ignore = [
     "RET506", # looks like a false-positive
     "SLF001", # everybody knows about the _-conventin, if one still accesses "protected" attributes one has their reasons!
     "FURB140",  # starmap slower than comprehension in 3.12
+    "SIM115" # produces false-postives in lambdas
 ]
 
 [lint.mccabe]
