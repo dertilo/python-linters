@@ -2,7 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![bear-ified](https://raw.githubusercontent.com/beartype/beartype-assets/main/badge/bear-ified.svg)](https://beartype.readthedocs.io)
 # python-linters
-- bundles ruff and ~~flake8~~ basedpyright into a single poetry-script
+- bundles ruff and ~~flake8~~ basedpyright into a single ~~poetry~~uv-script
 - even though I liked some flake8-rules (especially from [wemake-python-styleguide](https://wemake-python-styleguide.readthedocs.io/en/latest/)) dropped it in favor of ruff for being too slow
 - project independent linter configuration (via `ruff.toml`,~~`.flake8`~~`pyrightconfig.json`) -> one config to rule them all
   - well one can still override the default config via `ruff_extensions.toml` and `pyrightconfig.json` 
@@ -55,12 +55,12 @@ python-linters = { version = "<some-version-here>" }
     ],
 ```
 ### three scripts/commands that you can run locally
-1. `poetry run fixcode` to let black+isort+ruff "auto-fix" your code -> always have a `clean` git-repo before doing this (no uncommitted changes)
+1. `uv run fixcode` to let black+isort+ruff "auto-fix" your code -> always have a `clean` git-repo before doing this (no uncommitted changes)
    - [example output](#fixcode-example)
-1. `poetry run pythonlinter` -> to lint your code
+1. `uv run pythonlinter` -> to lint your code
    - [example black is not happy](#pythonlinter-black-is-not-happy) -> if you ran `fixcode` black is guaranteed to be happy!
    - [example ruff is not happy](#pythonlinter-ruff-is-not-happy)
-1. `poetry run addnoqa` to let ruff insert rules-violation-comments to your code
+1. `uv run addnoqa` to let ruff insert rules-violation-comments to your code
    - [example](#addnoqa-example)
 ```mermaid
 flowchart TD
@@ -70,9 +70,9 @@ classDef style2 fill:#ffffba
 classDef style3 fill:#baffc9 
 classDef style4 fill:#bae1ff
 op1["start: have a 'clean' repo"]:::style4 --> op2
-op2[\"poetry run fixcode\n refactor & git commit"/]:::style1 --> cond9{{"poetry run pythonlinter"}}:::style0
+op2[\"uv run fixcode\n refactor & git commit"/]:::style1 --> cond9{{"uv run pythonlinter"}}:::style0
 cond9 --> | complains | cond47{{"ruff"}}:::style0
-cond47 --> | complains | op51[\"poetry run addnoqa"/]:::style1
+cond47 --> | complains | op51[\"uv run addnoqa"/]:::style1
 op51 -->  sub53[\"refactor your code \nOR\n keep/add noqa-comment"/]:::style1
 sub53 --> op2
 cond47 --> | is happy | cond58{{"pyright"}}:::style0
@@ -81,11 +81,11 @@ cond58 --> | is happy | sub66["git commit"]
 sub66 -->  sub80
 cond9 --> | is happy | sub80["git push"]:::style3
 ```
-- write-operations (changing your code): `poetry run fixcode`, `poerty run addnoqa`, `refactor your code`
-- read-only-operations: `poetry run pythonlinter`,`git commit`, `git push`
+- write-operations (changing your code): `uv run fixcode`, `poerty run addnoqa`, `refactor your code`
+- read-only-operations: `uv run pythonlinter`,`git commit`, `git push`
 
 ## 3. setup for ci-pipeline
-* if you specified the packages in the `pyproject.toml` and you run just run `poetry run pythonlinter` without any arguments than the `pyproject.toml` is getting parsed and specified packages are getting linted 
+* if you specified the packages in the `pyproject.toml` and you run just run `uv run pythonlinter` without any arguments than the `pyproject.toml` is getting parsed and specified packages are getting linted 
 ```yaml
 stages:
   - lint # lint-stage!
@@ -113,7 +113,7 @@ linting:
 ### fixcode example
 ```commandline
 cd <somehwere>/whisper-streaming
-poetry run fixcode
+uv run fixcode
 Fixing <somehwere>/whisper-streaming/whisper_streaming/post_asr_preparations.py
 whisper_streaming/faster_whisper_inference/faster_whisper_inferencer.py:231:30: ARG005 Unused lambda argument: `x`
 whisper_streaming/faster_whisper_inference/faster_whisper_inferencer.py:234:5: RET503 Missing explicit `return` at the end of function able to return non-`None` value
@@ -135,8 +135,8 @@ folders_to_be_linted=['whisper_streaming', 'tests']
   - a missing return statement
   - missing type annotations
 ```commandline
-poetry run pythonlinter
-linter-order: black->ruff->flake8
+uv run pythonlinter
+linter-order: black->ruff->pyright
 
 ...
 
@@ -152,7 +152,7 @@ python_linters.run_linters.LinterException: 💩 ruff is not happy! 💩
 ### addnoqa example
 - only shows how many noqas it added (`3`) and how many files it left unchanged (`22`)
 ```commandline
-poetry run addnoqa
+uv run addnoqa
 Added 3 noqa directives.
 All done! ✨ 🍰 ✨
 22 files would be left unchanged.
@@ -177,17 +177,17 @@ def foobar(x): # noqa: ANN001, ANN202
         {
             "label": "fixcode",
             "type": "shell",
-            "command": "cd $(cd ${fileDirname} && git rev-parse --show-toplevel) && poetry run fixcode"
+            "command": "cd $(cd ${fileDirname} && git rev-parse --show-toplevel) && uv run fixcode"
         },
         {
             "label": "addnoqa",
             "type": "shell",
-            "command": "cd $(cd ${fileDirname} && git rev-parse --show-toplevel) && poetry run addnoqa"
+            "command": "cd $(cd ${fileDirname} && git rev-parse --show-toplevel) && uv run addnoqa"
         },
         {
             "label": "pythonlinter",
             "type": "shell",
-            "command": "cd $(cd ${fileDirname} && git rev-parse --show-toplevel) && poetry run pythonlinter"
+            "command": "cd $(cd ${fileDirname} && git rev-parse --show-toplevel) && uv run pythonlinter"
         }
     ]
 }

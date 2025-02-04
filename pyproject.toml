@@ -1,31 +1,38 @@
-[tool.poetry]
+[project]
 name = "python-linters"
 version = "0.0.0"
-description = "bundling config files for linters like ruff and flake8"
-authors = ["Tilo Himmelsbach <dertilo@gmail.com>"]
+description = "bundling config files for linters like ruff and pyright"
+authors = [{name = "Tilo Himmelsbach", email = "dertilo@gmail.com"}]
 readme = "README.md"
+license = {text = "MIT"}
+requires-python = "<4.0,>=3.10"
+dependencies = [
+    "toml<1.0.0,>=0.10.2",
+    "ruff>=0.0.291",
+    "basedpyright<2.0.0,>=1.12.5",
+    "json-with-comments<2.0.0,>=1.2.9",
+]
+
+[project.urls]
 repository = "https://github.com/dertilo/python-linters"
-packages = [{ include = "python_linters" }]
-license = "MIT"
 
-[tool.poetry.scripts]
-pythonlinter = 'python_linters.run_linters:main'
-fixcode = 'python_linters.fix_code:main'
-addnoqa = 'python_linters.add_noqa:main'
-
-[tool.poetry.dependencies]
-python = "^3.10"
-toml = "^0.10.2"
-ruff = ">=0.0.291"
-basedpyright = "^1.12.5"
-json-with-comments = "^1.2.9"
-
-[tool.poetry.group.dev.dependencies]
-setuptools-scm = "^7.1.0"
-
-[tool.poetry-dynamic-versioning]
-enable = true
+[project.scripts]
+pythonlinter = "python_linters.run_linters:main"
+fixcode = "python_linters.fix_code:main"
+addnoqa = "python_linters.add_noqa:main"
 
 [build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning>=1.0.0,<2.0.0"]
-build-backend = "poetry_dynamic_versioning.backend"
+requires = ["hatchling", "hatch-vcs"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "_version.py"
+
+[tool.hatch.build.targets.sdist]
+packages = ["python_linters"] # packages option is semantically equivalent to only-include
+
+[tool.hatch.build.targets.wheel]
+packages = ["python_linters"]

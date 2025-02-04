@@ -13,27 +13,25 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [ "3.11" ]
-        poetry-version: [ "1.7.1" ]
         os: [ ubuntu-22.04 ]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v4
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        enable-cache: true
+#        cache-dependency-glob: "uv.lock" # invalidate it when the lockfile changes -> tilo what exactly does this mean?
     - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-    - name: Run image
-      uses: abatilo/actions-poetry@v2
-      with:
-        poetry-version: ${{ matrix.poetry-version }}
-        poetry-plugins: "poetry-dynamic-versioning[plugin]"
-    - name: build sdist
-      run: poetry build
+    - name: Build the project
+      run: uv build
 
     - name: Save sdist
       uses: actions/upload-artifact@v4
       with:
         path: dist/*.tar.gz
-
   pypi-publish:
     name: Upload release to PyPI
     runs-on: ubuntu-latest
