@@ -50,6 +50,5 @@ def get_folders_to_be_linted(pyproject_toml: str) -> list[str]:
                 folders += ["tests"]
         if folders is None:
             raise PackagesOrFoldersToBeLintedAreNotProperlyDefined
-    assert len(folders) > 0
     print(f"found following {folders=}")
     return folders

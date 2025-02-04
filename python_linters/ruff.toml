@@ -44,7 +44,6 @@ select = [
     "YTT",	# flake8-2020
     "ANN",	# flake8-annotations
     "ASYNC",	# flake8-async
-    "TRIO",	# flake8-trio
     "S",	# flake8-bandit
     "BLE",	# flake8-blind-except
 # excluded   "FBT",	# flake8-boolean-trap -> tilo: this one might be too strict/hard to refactor
@@ -75,7 +74,7 @@ select = [
     "SLOT",	# flake8-slots
     "SIM",	# flake8-simplify
     "TID",	# flake8-tidy-imports
-    "TCH",	# flake8-type-checking
+    "TC",	# flake8-type-checking
     "INT",	# flake8-gettext
     "ARG",	# flake8-unused-arguments
     "PTH",	# flake8-use-pathlib
@@ -92,9 +91,11 @@ select = [
     "TRY",	# tryceratops
     "FLY",	# flynt
     "NPY",	# NumPy-specific rules
+    "FAST",	# FastAPI
 # excluded    "AIR",	# Airflow -> we are not using airflow!
     "PERF",	# Perflint
     "FURB",	# refurb
+    "DOC",	# pydoclint
     "RUF",	# Ruff-specific rules
 ]
 # ---------------       IGNORING specific rules       --------------------------------------------------------

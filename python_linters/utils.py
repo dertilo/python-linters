@@ -31,7 +31,7 @@ def find_pyproject_toml(
 def get_pyproject_dir() -> Path:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "filepath",
+        "--filepath",
         type=str,
         default=os.getcwd(),
         help="currently opened file in IDE or current path",
