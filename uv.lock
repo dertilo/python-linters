@@ -40,7 +40,7 @@ wheels = [
 
 [[package]]
 name = "python-linters"
-version = "0.0.0"
+version = "0.1.6.dev0+g76fe81f.d20250204"
 source = { editable = "." }
 dependencies = [
     { name = "basedpyright" },

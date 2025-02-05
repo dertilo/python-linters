@@ -16,7 +16,7 @@ def main() -> None:
     run_cmd_ignore_errors(
         f"cd {dirr} && ruff check {folders} --config={extended_ruff_toml} --fix",
     )
-    run_cmd(f"cd {dirr} && ruff format {folders}")
+    run_cmd(f"cd {dirr} && ruff format {folders} --config={extended_ruff_toml}")
 
 
 

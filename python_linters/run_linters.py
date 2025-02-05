@@ -20,7 +20,7 @@ def main() -> None:
     wrote_pyright_json = prepare_pyrightjson(str(dirr))
 
     NAME2LINTER = {
-        "ruff-format": lambda folders_tobelinted: f"cd {dirr} && ruff format --check {' '.join(folders_tobelinted)}",
+        "ruff-format": lambda folders_tobelinted: f"cd {dirr} && ruff format --check {' '.join(folders_tobelinted)} --config={create_extended_ruff_toml(str(dirr))}",
         "ruff": lambda folders_tobelinted: f"cd {dirr} && ruff check {' '.join(folders_tobelinted)} --config={create_extended_ruff_toml(str(dirr))}",
         "basedpyright": lambda folders_tobelinted: f"cd {dirr} && basedpyright {' '.join(folders_tobelinted)} --gitlabcodequality report.json --level $(cat pyrightlevel.txt 2>/dev/null || echo 'error')",
         # most flake8 linters are already included in ruff

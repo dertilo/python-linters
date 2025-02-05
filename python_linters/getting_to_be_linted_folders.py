@@ -36,19 +36,7 @@ def get_folders_to_be_linted(pyproject_toml: str) -> list[str]:
             .get("folders_to_be_linted", None)
         )
         if folders is None:
-            parent_path = pathlib.Path(pyproject_toml).parent.absolute()
-            if (
-                (packages := t.get("tool", {}).get("poetry", {}).get("packages", None))
-                is not None
-            ):
-                folders = [p["include"] for p in packages]
-            elif parent_path.joinpath("src").is_dir():
-                folders = ["src"]
-            else:
-                folders = []
-            if parent_path.joinpath("tests").is_dir():
-                folders += ["tests"]
-        if folders is None:
-            raise PackagesOrFoldersToBeLintedAreNotProperlyDefined
+            folders = ["./"]
+            # raise PackagesOrFoldersToBeLintedAreNotProperlyDefined
     print(f"found following {folders=}")
     return folders

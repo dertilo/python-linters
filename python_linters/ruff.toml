@@ -49,7 +49,7 @@ select = [
 # excluded   "FBT",	# flake8-boolean-trap -> tilo: this one might be too strict/hard to refactor
     "B",	# flake8-bugbear
     "A",	# flake8-builtins
-    "COM",	# flake8-commas
+#    "COM",	# flake8-commas # may cause conflicts when used with the formatter: `COM812` -> recommended to be disabled
 # excluded   "CPY",	# flake8-copyright -> tilo: who cares about copyright? chatGPT does not care!
     "C4",	# flake8-comprehensions
     "DTZ",	# flake8-datetimez
@@ -95,17 +95,15 @@ select = [
 # excluded    "AIR",	# Airflow -> we are not using airflow!
     "PERF",	# Perflint
     "FURB",	# refurb
-    "DOC",	# pydoclint
+#    "DOC",	# pydoclint # tilo: maybe somewhen!
     "RUF",	# Ruff-specific rules
 ]
 # ---------------       IGNORING specific rules       --------------------------------------------------------
 ignore = [
-    "TCH001","TCH002","TCH003",   # typing-import-only-first-party-import -> tilo: I need those types for runtime-type-validation! (beartype
+    "TC001","TC002","TC003",   # typing-import-only-first-party-import -> tilo: I need those types for runtime-type-validation! (beartype
     "E501",     # E501 	line-too-long
     "S101",     # prohibits using any assert! -> TODO!
     "W605",     #  Invalid escape sequence: `\ ` tilo: looks like false-positive to me! but not sure -> TODO!
-    "ANN101",   # ANN101 Missing type annotation for `self` in method
-    "ANN102",   # Missing type annotation for cls classmethod
     "ANN401",   # ANN401 disallows "Any"
     "ANN204",   # missing-return-type-special-method (ANN204) is very annoying especially for __enter__, __exit__ etc
     "ANN002",   # ANN002 *args
