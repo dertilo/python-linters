@@ -1,40 +1,35 @@
 [project]
 name = "python-linters"
-description = "bundling config files for linters like ruff and pyright"
-authors = [ { name = "Tilo Himmelsbach", email = "dertilo@gmail.com" } ]
+version = "0.2.0"
+description = "Run ruff, ty and pymodularity on a Python project and print one JSON report grouped by rule."
 readme = "README.md"
-license = {text = "MIT"}
-requires-python = "<4.0,>=3.10"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{ name = "Tilo Himmelsbach" }]
 dependencies = [
-    "toml<1.0.0,>=0.10.2",
-    "ruff>=0.0.291",
-    "basedpyright<2.0.0,>=1.12.5",
-    "json-with-comments<2.0.0,>=1.2.9",
+    "ruff==0.17.3",
+    "ty==0.0.90",
+    "pymodularity",
 ]
-dynamic = [
-    "version"
-]
-
-[project.urls]
-repository = "https://github.com/dertilo/python-linters"
 
 [project.scripts]
-pythonlinter = "python_linters.run_linters:main"
-fixcode = "python_linters.fix_code:main"
-addnoqa = "python_linters.add_noqa:main"
+python-linters = "python_linters.__main__:main"
+
+[tool.uv.sources]
+pymodularity = { path = "/home/tilo/code/pymodularity", editable = true }
+
+[tool.deptry.per_rule_ignores]
+# DEP002 (unused-dependency) false positive: deptry only sees `import` statements,
+# but this package runs ruff, ty and pymodularity as `sys.executable -m <tool>`
+# subprocesses, never `import`s them. All three are genuinely required at
+# runtime for `python-linters lint` to work.
+DEP002 = ["ruff", "ty", "pymodularity"]
+
+[dependency-groups]
+dev = [
+    "pytest",
+]
 
 [build-system]
-requires = ["hatchling", "hatch-vcs"]
-build-backend = "hatchling.build"
-
-[tool.hatch.version]
-source = "vcs"
-
-[tool.hatch.build.hooks.vcs]
-version-file = "_version.py"
-
-[tool.hatch.build.targets.sdist]
-packages = ["python_linters"] # packages option is semantically equivalent to only-include
-
-[tool.hatch.build.targets.wheel]
-packages = ["python_linters"]
+requires = ["uv_build>=0.10.7,<0.11.0"]
+build-backend = "uv_build"

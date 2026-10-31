@@ -1,0 +1,203 @@
+# ============================================================================
+# ty Reference Configuration
+# ============================================================================
+#
+# Canonical rule table for new Python projects. Every rule ty 0.0.90 knows is
+# listed below, one line each, with no `all = "error"` base. Each line is
+# "error" or "ignore". A "warn" setting is never used, because a warning
+# does not fail a CI gate, so a green run hides it.
+#
+# Three sections: the ignored rules, each under a comment giving its triage
+# reason. Then the rules ty turns off by default that this file turns on.
+# Then the rules ty already enables, alphabetical, without comments.
+#
+# Copy this table as-is:
+#   - into a project's own `ty.toml` (as the top-level `[rules]` table), or
+#   - into `pyproject.toml` under `[tool.ty.rules]` (rename the table header,
+#     keep every line).
+#
+# Last triaged against: ty 0.0.90 (140 rules: 97 error-by-default,
+# 25 warn-by-default, 18 ignore-by-default).
+#
+# Re-check the copied table after every ty version bump:
+#   python-linters check-config ty <path/to/ty.toml>
+# It reports rules ty knows that the table omits (untriaged) and rules the
+# table names that ty no longer knows (stale), and exits non-zero on either.
+# ============================================================================
+
+[rules]
+
+# --- Ignored rules: each carries its triage reason -------------------------
+
+# not applicable: checks PEP 484's legacy `__`-prefixed positional-only
+# parameters, obsolete since PEP 570's `/` (Python 3.8).
+invalid-legacy-positional-parameter = "ignore"
+
+# not applicable: a no-op unless `TY_UV=1` is set and uv >= 0.12 supplies
+# dependency metadata. Re-triage when a project opts in.
+missing-direct-dependency = "ignore"
+
+# false positives: ty's flow narrowing ignores a concurrent task mutating an
+# instance attribute across an `await`. So it reports a check on that
+# attribute after the `await` as always true or always false.
+redundant-condition-strict = "ignore"
+
+# false positives: ty infers an empty literal (`[]`, `{}`, `set()`) as
+# `list[Unknown]` etc. and rejects it against `Sequence`, `Mapping`,
+# `AbstractSet`. The only per-site fix is code shaped for the checker
+# (`list[Path]()` instead of `[]`), and code never changes only because ty
+# cannot infer a type.
+# cost: an `Any` reaching a typed name (argparse attributes,
+# `re.Match.group()`) goes unflagged.
+# Re-triage on each ty bump: ty is 0.0.x and its inference changes.
+unsound-assignment = "ignore"
+unsound-return-statement = "ignore"
+unsound-yield = "ignore"
+
+# not applicable: checks classes built with `type()`, which the doctrine
+# does not use. Astral calls the rule noisy on dynamic `type()` code.
+unsupported-dynamic-base = "ignore"
+
+# --- Enabled although off by default in ty --------------------------------
+
+# off by default for false-positive volume. On here until a triage shows
+# that volume, then they move to the ignored section with the evidence.
+division-by-zero = "error"
+possibly-missing-attribute = "error"
+possibly-missing-import = "error"
+possibly-unresolved-reference = "error"
+
+# opt-in strictness: astral keeps these off as stricter than most projects
+# want. This file wants that strictness.
+blanket-ignore-comment = "error"
+disjoint-cast = "error"
+dynamic-function-decorator-return = "error"
+mismatched-sentinel-name = "error"
+missing-override-decorator = "error"
+missing-type-argument = "error"
+truthiness-test-of-none-union = "error"
+
+# --- Enforced rules: on by default in ty, alphabetical ----------------------
+
+abstract-and-final-method = "error"
+abstract-method-in-final-class = "error"
+ambiguous-protocol-member = "error"
+assert-type-unspellable-subtype = "error"
+call-abstract-method = "error"
+call-non-callable = "error"
+call-top-callable = "error"
+conflicting-declarations = "error"
+conflicting-metaclass = "error"
+cyclic-class-definition = "error"
+cyclic-type-alias-definition = "error"
+dataclass-field-order = "error"
+deprecated = "error"
+duplicate-base = "error"
+duplicate-kw-only = "error"
+empty-body = "error"
+escape-character-in-forward-annotation = "error"
+experimental-syntax = "error"
+final-on-non-method = "error"
+final-without-value = "error"
+ignore-comment-unknown-rule = "error"
+implicit-concatenated-string-type-annotation = "error"
+inconsistent-mro = "error"
+index-out-of-bounds = "error"
+ineffective-final = "error"
+instance-layout-conflict = "error"
+invalid-argument-type = "error"
+invalid-assignment = "error"
+invalid-attribute-access = "error"
+invalid-attribute-override = "error"
+invalid-await = "error"
+invalid-base = "error"
+invalid-context-manager = "error"
+invalid-dataclass = "error"
+invalid-dataclass-override = "error"
+invalid-declaration = "error"
+invalid-enum-member-annotation = "error"
+invalid-exception-caught = "error"
+invalid-explicit-override = "error"
+invalid-frozen-dataclass-subclass = "error"
+invalid-generic-class = "error"
+invalid-generic-enum = "error"
+invalid-ignore-comment = "error"
+invalid-init-type-variable = "error"
+invalid-key = "error"
+invalid-legacy-type-variable = "error"
+invalid-match-pattern = "error"
+invalid-metaclass = "error"
+invalid-method-override = "error"
+invalid-module-getattr-call = "error"
+invalid-mutable-override = "error"
+invalid-named-tuple = "error"
+invalid-named-tuple-override = "error"
+invalid-newtype = "error"
+invalid-overload = "error"
+invalid-parameter-default = "error"
+invalid-paramspec = "error"
+invalid-property-type-override = "error"
+invalid-protocol = "error"
+invalid-raise = "error"
+invalid-return-type = "error"
+invalid-super-argument = "error"
+invalid-syntax-in-forward-annotation = "error"
+invalid-total-ordering = "error"
+invalid-type-alias-type = "error"
+invalid-type-arguments = "error"
+invalid-type-checking-constant = "error"
+invalid-type-form = "error"
+invalid-type-guard-definition = "error"
+invalid-type-variable-bound = "error"
+invalid-type-variable-constraints = "error"
+invalid-type-variable-default = "error"
+invalid-typed-dict-field = "error"
+invalid-typed-dict-header = "error"
+invalid-typed-dict-statement = "error"
+invalid-yield = "error"
+isinstance-against-protocol = "error"
+isinstance-against-typed-dict = "error"
+mismatched-type-name = "error"
+missing-argument = "error"
+missing-slot = "error"
+missing-typed-dict-key = "error"
+no-matching-overload = "error"
+non-callable-init-subclass = "error"
+not-iterable = "error"
+not-subscriptable = "error"
+override-of-final-method = "error"
+override-of-final-variable = "error"
+parameter-already-assigned = "error"
+positional-only-parameter-as-kwarg = "error"
+possibly-missing-implicit-call = "error"
+possibly-missing-submodule = "error"
+pydantic-discarded-extra-argument = "error"
+raw-string-type-annotation = "error"
+redundant-cast = "error"
+redundant-condition = "error"
+redundant-final-classvar = "error"
+shadowed-type-variable = "error"
+static-assert-error = "error"
+subclass-of-dataclass-with-order = "error"
+subclass-of-final-class = "error"
+super-call-in-named-tuple-method = "error"
+too-many-positional-arguments = "error"
+truthiness-test-of-callable = "error"
+truthiness-test-of-iterable = "error"
+type-assertion-failure = "error"
+unavailable-implicit-super-arguments = "error"
+unbound-type-variable = "error"
+undefined-reveal = "error"
+unknown-argument = "error"
+unresolved-attribute = "error"
+unresolved-global = "error"
+unresolved-import = "error"
+unresolved-reference = "error"
+unsupported-base = "error"
+unsupported-bool-conversion = "error"
+unsupported-operator = "error"
+unused-awaitable = "error"
+unused-ignore-comment = "error"
+unused-type-ignore-comment = "error"
+useless-overload-body = "error"
+zero-stepsize-in-slice = "error"

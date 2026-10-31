@@ -1,0 +1,505 @@
+# ============================================================================
+# Ruff Reference Configuration
+# ============================================================================
+#
+# Canonical starting point for new Python projects. Copy this file as
+# `ruff.toml` into your project root and adjust:
+#
+#   1. target-version     — match your project's minimum Python version
+#   2. known-first-party  — list your project's own packages
+#   3. exclude            — add project-specific paths if needed
+#   4. ignore             — add project-specific ignores WITH justification
+#   5. flake8-type-checking — list your runtime-evaluated base classes and
+#                           decorators (pydantic, FastAPI preset)
+#
+# Last triaged against: ruff 0.17.3
+# Rule names in `select`/`ignore` and in `# ruff: ignore[...]` comments need
+# `preview = true`: without it ruff rejects the config and treats name-based
+# suppression comments as inert.
+# ============================================================================
+
+# Older ruff fails on the first rule name it does not know, with a cryptic
+# `Unknown rule selector`. This guard names the version instead.
+required-version = ">=0.17.3"
+
+target-version = "py312"
+
+# Ruff/Black default: 88 ("~10% over 80 — the wise choice" per Black docs).
+# Common alternatives:
+#   79  — PEP 8 stdlib standard
+#   88  — Black/Ruff default (this config)
+#  100  — PEP 8 allows up to 99 for teams; popular with type-heavy codebases
+#  119  — Django project standard (79 for docstrings)
+# Pick one for the project and stick with it. 88 is the safe default;
+# 100 is reasonable if long signatures or type annotations cause excessive wrapping.
+line-length = 88
+
+# ── Lint settings ───────────────────────────────────────────────────────────
+
+[lint]
+preview = true
+# A preview rule runs only when `select` names it. A category select brings its
+# stable rules alone, so a ruff bump cannot switch on an unreviewed preview rule.
+explicit-preview-rules = true
+# No `extend-safe-fixes`: an unsafe fix guesses intent and silences the rule, so the finding must be resolved by a decision.
+
+# `RUF100` (unused-noqa) stays enabled: it is the only automated check that a
+# `# ruff: ignore[<rule-name>]` cites the rule that actually fires there, and
+# a suppression naming the wrong rule is inert — it silently suppresses
+# nothing while reading as justified. Enable it and it also flags every
+# suppression made redundant by a broader `ignore` / `per-file-ignores` entry.
+#
+# It does NOT inspect other tools' suppressions: `# type: ignore` (mypy),
+# `# ty: ignore` (ty), and `# nosemgrep` use their own comment syntax. A
+# `# noqa` carrying a code of a tool ruff does not implement (vulture's `V…`)
+# trips RUF100 and noqa-comments (RUF105) — list that prefix here rather than
+# ignoring either rule:
+#
+# external = ["V"]   # keep vulture's `# noqa: V…` directives
+
+# ── Rule categories ─────────────────────────────────────────────────────────
+#
+# Every ruff category must appear below — either enabled in `select` or
+# commented out with `# excluded` and a reason. A rule without a code (ruff
+# ships new rules without one since 0.16.5) has no prefix to inherit, so it
+# appears by name under the same convention. This makes it easy to
+# audit coverage and triage new categories when ruff is updated.
+#
+# Categories are grouped: core → style → security → complexity → framework.
+
+select = [
+    # ── Core correctness ──
+    "F",     # Pyflakes — undefined names, unused imports, unreachable code
+    "E",     # pycodestyle errors — basic PEP 8 violations
+    "W",     # pycodestyle warnings — whitespace, deprecation warnings
+    "B",     # flake8-bugbear — common pitfalls (mutable defaults, assert misuse, …)
+    "PLE",   # Pylint errors — actual bugs (bad super(), invalid __all__, …)
+    "UP",    # pyupgrade — modernize syntax for target-version (f-strings, type unions, …)
+
+    # ── Imports ──
+    "I",     # isort — consistent import ordering
+    "FA",    # flake8-future-annotations — fires only for target-version <= py39
+    "ICN",   # flake8-import-conventions — `import numpy as np` etc.
+    "TID",   # flake8-tidy-imports — TID252 catches parent-relative `from ..x` by default; sibling `from .x` needs [lint.flake8-tidy-imports] ban-relative-imports = "all". Also: banned-api markers.
+    "TC",    # flake8-type-checking — move typing-only imports behind TYPE_CHECKING
+
+    # ── Type annotations ──
+    "ANN",   # flake8-annotations — enforce type annotations on public API
+             # Noisy on first adoption. Consider ignoring ANN201 temporarily,
+             # but aim to enable it — return types are the highest-value annotations.
+
+    # ── Naming ──
+    "N",     # pep8-naming — PEP 8 naming conventions (classes, functions, constants)
+             # Watch out for N815 on Pydantic models with camelCase JSON fields.
+
+    # ── Security ──
+    "S",     # flake8-bandit — security antipatterns (hardcoded passwords, exec, …)
+    "EXE",   # flake8-executable — shebang correctness
+
+    # ── Error handling ──
+    "BLE",   # flake8-blind-except — no bare `except:` or `except Exception:`
+    "EM",    # flake8-errmsg — don't embed f-strings directly in exception constructors
+    "RSE",   # flake8-raise — correct raise usage
+    "TRY",   # tryceratops — try/except hygiene (too broad except, reraise properly, …)
+
+    # ── Code style & simplification ──
+    "SIM",   # flake8-simplify — simplifiable if/else, context managers, boolean ops
+    "PIE",   # flake8-pie — misc. simplifications (no-op pass, unnecessary spread, …)
+    "RET",   # flake8-return — unnecessary else-after-return, implicit return values
+    "C4",    # flake8-comprehensions — prefer list/dict/set comprehensions over map/filter
+    "FLY",   # flynt — prefer f-strings over .format() and % formatting
+    "Q",     # flake8-quotes — consistent quote style
+    "ISC",   # flake8-implicit-str-concat — catch accidental string concatenation
+    "SLOT",  # flake8-slots — suggest __slots__ on simple classes
+
+    # ── Unused code & arguments ──
+    "ARG",   # flake8-unused-arguments — flag unused function/method arguments
+
+    # ── Pathlib & modernization ──
+    "PTH",   # flake8-use-pathlib — prefer pathlib over os.path
+    "FURB",  # refurb — more modernization suggestions
+
+    # ── Logging ──
+    "LOG",   # flake8-logging — correct logging module usage
+    "G",     # flake8-logging-format — logging format string issues
+
+    # ── Async ──
+    "ASYNC", # flake8-async — async pitfalls (blocking calls in async, …)
+
+    # ── Testing ──
+    "PT",    # flake8-pytest-style — pytest best practices
+    "pytest-fixture-autouse",  # code-less rule, no prefix selects it: an autouse
+                               #   fixture injects hidden setup into every test in scope
+    "shared-clock-mock",  # code-less rule: patching `worker.time.sleep` patches the
+                          #   process-wide `time.sleep`, which other threads and tasks
+                          #   share. Inject a clock or patch `worker.time` instead
+
+    # ── Complexity ──
+    "unnecessary-regular-expression-compile",  # code-less rule:
+                          #   `re.compile(p).match(s)` used once is `re.match(p, s)`
+    "C90",   # mccabe — cyclomatic complexity threshold
+    "PLC",   # Pylint convention — import placement, naming, …
+    "PLR",   # Pylint refactor — too many args/branches/returns, magic values, …
+    "PLW",   # Pylint warnings — global statements, unreachable code, …
+    "PERF",  # Perflint — performance antipatterns
+
+    # ── Framework-specific ──
+    "FAST",  # FastAPI — common FastAPI mistakes (missing Annotated, …)
+    "DTZ",   # flake8-datetimez — require timezone-aware datetimes
+    "PYI",   # flake8-pyi — type stub (.pyi) correctness
+    "INP",   # flake8-no-pep420 — implicit namespace packages
+    "INT",   # flake8-gettext — i18n correctness
+
+    # ── Self-access ──
+    "SLF",   # flake8-self — flag access to private members from outside
+
+    # ── Builtins ──
+    "A",     # flake8-builtins — don't shadow Python builtins
+
+    # ── Debugger ──
+    "T10",   # flake8-debugger — no leftover breakpoint() / pdb calls
+
+    # ── Ruff-specific ──
+    "RUF",   # Ruff-specific rules — parenthesized generators, ambiguous unicode, …
+    "PGH",   # pygrep-hooks — blanket noqa, type: ignore without code
+
+    # ── Numeric / data libraries (harmless if unused — rules only fire on relevant code) ──
+    "NPY",   # NumPy-specific rules — deprecated NumPy aliases
+    "PD",    # pandas-vet — common pandas antipatterns
+    "YTT",   # flake8-2020 — outdated sys.version checks
+
+    # ── Preview rules, selected by name ──────────────────────────────────
+    # `explicit-preview-rules = true`: a category select above turns on only its
+    # stable rules. Each preview rule below was triaged on ruff 0.17.3.
+    # A preview rule in a selected category that is neither listed
+    # here nor covered by an `# excluded` line below is untriaged.
+
+    # Ruff-specific (25)
+    # bugs: the code runs but does the wrong thing
+    "missing-f-string-syntax",          # `"{x}"` without `f` prints the braces
+    "unraw-re-pattern",                 # `"\b"` in a non-raw pattern is a backspace, not a word boundary, and nothing else warns
+    "implicit-class-var-in-dataclass",  # an unannotated field is a class var shared by all instances
+    "property-without-return",          # the property silently returns None
+    "float-equality-comparison",        # `==` on floats depends on rounding; tests ignore it
+    "f-string-percent-format",          # `%` on an f-string mixes two interpolations
+    "incorrect-decorator-order",        # decorators apply bottom-up, the wrong order breaks at runtime
+    "fallible-context-manager",         # cleanup after an unguarded `yield` skips on exception
+    "method-receiver-default",          # a default on `self`/`cls` applies only to `A.method()` calls, almost always a mistake
+    "unused-async",                     # forces callers into async and hides a missing await; tests ignore it
+    # dead code: removing it changes no behavior, mostly auto-fixable
+    "needless-else",
+    "unnecessary-if",
+    "useless-finally",
+    "unnecessary-assign-before-yield",
+    "falsy-dict-get-fallback",
+    "redundant-bool-literal",
+    "unnecessary-regular-expression",   # a str method replaces the regex
+    "logging-eager-conversion",         # `%s` already calls str(), and `repr(x)` with `%s` is `%r`
+    # readability
+    "used-dummy-variable",              # an `_x` that is read lies about being unused
+    "non-empty-init-module",            # code in `__init__.py` runs on import and gets overlooked
+    "incorrectly-parenthesized-tuple-in-subscript",  # one tuple style in subscripts
+    "indented-form-feed",               # the language reference leaves a form feed mid-indentation undefined
+    # rule names over codes: a name says what it checks, a code needs a lookup
+    "noqa-comments",
+    "rule-codes-in-suppression-comments",
+    "rule-codes-in-selectors",
+
+    # Pylint (18)
+    # bugs: runtime errors or silently lost behavior
+    "dict-iter-missing-items",          # `for k, v in d` unpacks keys, not items
+    "modified-iterating-set",           # RuntimeError
+    "redefined-slots-in-subclass",      # makes the base class slot unreachable
+    "bad-dunder-method-name",           # a misspelled dunder is never called
+    "unspecified-encoding",             # `open()` without encoding uses the platform locale
+    # size and nesting limits, every threshold set under [lint.pylint]
+    "too-many-public-methods",
+    "too-many-locals",
+    "too-many-boolean-expressions",
+    "too-many-nested-blocks",           # the nesting axis C901 cannot see
+    "too-many-statements-in-try-clause",  # the except also catches failures from statements nobody expected to raise
+    # design: private names stay private (as SLF), functions over methods
+    "import-private-name",              # `_name` is private to its module
+    "no-self-use",                      # a method without `self` is a function; tests ignore it
+    # idioms, mostly auto-fixable
+    "unnecessary-dunder-call",
+    "no-classmethod-decorator",
+    "no-staticmethod-decorator",
+    "swap-with-temporary-variable",
+    "non-augmented-assignment",
+    "literal-membership",
+
+    # flake8-bandit (4): each flags an insecure library or protocol at import,
+    # because no stable call-level rule covers these
+    "suspicious-xmlrpc-import",         # XML attacks over the network
+    "suspicious-httpoxy-import",        # CGI handlers, httpoxy
+    "suspicious-pycrypto-import",       # pycrypto: unmaintained, known buffer overflow. Maintained
+                                        #   pycryptodome shares the `Crypto` namespace and also fires:
+                                        #   check the distribution, then suppress with a reason
+    "suspicious-pyghmi-import",         # IPMI is unencrypted
+
+    # refurb (10): stdlib idioms that say the intent, mostly auto-fixable.
+    # Unlike the 3 excluded refurb rules, no fix here loses a type or breaks isinstance
+    "read-whole-file",                  # Path.read_text(), same direction as PTH
+    "write-whole-file",                 # Path.write_text(), same direction as PTH
+    "delete-full-slice",
+    "for-loop-set-mutations",
+    "slice-copy",
+    "unnecessary-enumerate",
+    "math-constant",                    # catches a truncated pi
+    "repeated-global",
+    "hardcoded-string-charset",
+    "meta-class-abc-meta",
+
+    # flake8-bugbear (4)
+    "return-in-generator",              # a for loop drops the returned value
+    "loop-iterator-mutation",           # mutating the iterable skips elements or loops forever
+    "class-as-data-structure",          # an `__init__`-only class is a dataclass
+    "del-attr-with-constant",           # `delattr(o, "x")` is `del o.x`, auto-fixable
+
+    # pyupgrade (3): legacy spellings, mostly auto-fixable
+    "while-one",                        # Python 2 idiom
+    "deprecated-abc-decorator",         # deprecated since 3.3
+    "context-manager-iterator",         # @contextmanager needs Generator, Iterator lacks `throw`
+
+    # flake8-async (1): a context manager's cleanup is delayed until the
+    # generator closes, when `await` is no longer allowed
+    "yield-in-context-manager-in-async-generator",
+
+    # flake8-pytest-style (1): `pytest.warns()` without a warning fails at runtime
+    "pytest-warns-without-warning",
+
+    # flake8-type-checking (1): quotes in an explicit type alias are needless. A quoted
+    # `TypeAlias` is a str at runtime, so `Alias | None` raises TypeError
+    "quoted-type-alias",
+
+    # ── Excluded categories ──────────────────────────────────────────────
+    # Each must have a reason.
+
+# excluded    "AIR",   # Airflow — not relevant outside Airflow projects
+# excluded    "COM",   # flake8-commas — conflicts with `ruff format` (COM812)
+# excluded    "CPY",   # flake8-copyright — copyright headers not enforced
+# excluded    "D",     # pydocstyle — docstrings rarely improve well-named code;
+                        #   enforce selectively via per-file if needed
+# excluded    "DJ",    # flake8-django — only for Django projects
+# excluded    "DOC",   # pydoclint — docstring param/return validation; enable
+                        #   once D is adopted
+# excluded    "ERA",   # eradicate — commented-out code is sometimes intentional
+                        #   (bookmarks, alternative approaches being tested)
+# excluded    "FBT",   # flake8-boolean-trap — philosophically sound but hard to
+                        #   retrofit; `def foo(*, verbose: bool)` is fine
+# excluded    "FIX",   # flake8-fixme — TODOs/FIXMEs in code are legitimate
+                        #   bookmarks during development
+# excluded    "T20",   # flake8-print — print() is fine in scripts, CLIs, and
+                        #   debugging; logging.info isn't always better
+# excluded    "TD",    # flake8-todos — enforces TODO format (author, link);
+                        #   too bureaucratic for most projects
+
+    # ── Excluded preview rules ───────────────────────────────────────────
+    # Preview rules stay off unless selected by name. Each prefix needs a reason.
+
+# excluded    "E11", "E2", "E3", "E502", "W391",  # pycodestyle preview (42): `ruff format` settles all but E262/E265/E266, which only police comment prefixes (`#:` Sphinx, `##` banners), 0 findings outside generated `*_pb2.py`, E111/E114/E117 conflict with it
+# excluded    "S401", "S402", "S403", "S404", "S405", "S406", "S407", "S408", "S409",  # bandit import bans (9): importing is not the risk, stable S3xx/S60x rules flag the risky calls
+# excluded    "FURB113", "FURB118", "FURB189",  # refurb (3): fix erases types (itemgetter -> Any), reads worse (extend), or breaks isinstance (UserList/UserDict)
+]
+
+# ── Ignored rules ───────────────────────────────────────────────────────────
+#
+# Every ignore must have a justification. Group by theme.
+# Rules listed here are GLOBALLY disabled. Prefer per-file-ignores for
+# rules that only need suppression in specific contexts (tests, scripts).
+
+ignore = [
+    # ── Line length ──
+    "line-too-long",  # the formatter handles wrappable lines; remaining
+                      #   violations are long strings/URLs that would be worse
+                      #   if broken up
+
+    # ── Type annotations ──
+    #   We enforce annotations broadly but exempt specific patterns that
+    #   add noise without value.
+    # ANN401 (typing.Any disallowed) stays ON: with basedpyright dropped
+    # in favor of ty, ANN401 is the gate's only coverage for explicit
+    # Any (basedpyright's reportExplicitAny): ty has no equivalent rule.
+    # missing return type on __init__, __enter__, __exit__ — always obvious
+    # from context
+    "missing-return-type-special-method",
+    "missing-type-args",  # missing type on *args — typically pass-through,
+                          #   type depends on caller
+    "missing-type-kwargs",  # missing type on **kwargs — same reasoning as
+                            #   missing-type-args
+
+    # ── Naming ──
+    # prevents CONSTANT_IN_FUNCTION convention, which is useful for thresholds
+    # and config values inside functions
+    "non-lowercase-variable-in-function",
+    "invalid-function-name",  # test names like `test_ASRDecoder` embed class
+                              #   names for grep-ability
+    "invalid-argument-name",  # abbreviations like max_SNR are more readable
+                              #   than max_snr
+
+    # ── Code style ──
+    "lambda-assignment",  # `transform = lambda x: x.strip()` is sometimes
+                          #   clearer than a named function for one-off local
+                          #   transforms
+    "in-dict-keys",  # use `key in dict` — `key in dict.keys()` is more
+                     #   explicit about intent; Python Zen says explicit >
+                     #   implicit
+    "superfluous-else-return",  # the else branch makes the two paths visually
+                                #   symmetric and easier to read
+    "superfluous-else-raise",  # same reasoning as superfluous-else-return
+    # super() issues with dataclass(slots=True), see
+    # https://stackoverflow.com/questions/73268995
+    "super-call-with-parameters",
+    "compare-to-empty-string",  # `s == ""` is more explicit than `not s` (the
+                                #   latter also matches None, 0, [])
+
+    # ── Security ──
+    "hardcoded-bind-all-interfaces",  # hardcoded 0.0.0.0 binding —
+                                      #   intentional for dev servers
+    # non-cryptographic random — not relevant when random is used for jitter,
+    # sampling, or test data (not tokens/keys)
+    "suspicious-non-cryptographic-random-usage",
+
+    # ── Logging ──
+    "logging-f-string",  # f-string in logging — f-strings in log calls are
+                         #   fine; the lazy-% argument only matters at high log
+                         #   volume where the string wouldn't be emitted anyway
+
+    # ── Performance ──
+    "reimplemented-starmap",  # starmap slower than comprehension — confirmed
+                              #   regression in Python 3.12, comprehensions are
+                              #   faster
+
+    # ── Complexity / false positives ──
+    "open-file-with-context-handler",  # false positives with lambdas and
+                                       #   callback-based APIs
+]
+
+# ── Per-file ignores ────────────────────────────────────────────────────────
+#
+# Rules that should only be suppressed in specific file patterns.
+# Prefer this over global ignore when the rule IS useful in production code.
+
+[lint.per-file-ignores]
+"**/tests/**/*.py" = [  # any depth: monorepos nest tests per package
+    "assert",  # pytest's testing idiom
+    "hardcoded-temp-file",  # hardcoded /tmp — fine in tests
+    "magic-value-comparison",  # `assert len(x) == 3` is clear
+    "no-self-use",  # pytest classes group tests, methods don't need self
+    "too-many-public-methods",  # a pytest class groups tests and has no
+                                #   callers, so its method count is not an
+                                #   interface
+    # missing return type — test functions always return None
+    "missing-return-type-undocumented-public-function",
+    "import-private-name",  # testing internal functions is legitimate
+    "unused-async",  # async test doubles mirror the awaited signature they replace
+    "float-equality-comparison",  # asserting an exactly representable result is correct
+    "too-many-locals",  # an integration test sets up many real collaborators
+]
+"test_*.py" = [
+    "assert",
+    "hardcoded-temp-file",
+    "magic-value-comparison",
+    "no-self-use",
+    "too-many-public-methods",
+    "missing-return-type-undocumented-public-function",
+    "implicit-namespace-package",  # standalone test scripts
+    "import-private-name",
+    "unused-async",
+    "float-equality-comparison",
+    "too-many-locals",
+]
+
+# ── isort ───────────────────────────────────────────────────────────────────
+
+[lint.isort]
+known-first-party = []  # ← EDIT: add your project's packages
+
+# ── Type checking imports ───────────────────────────────────────────────────
+
+[lint.flake8-type-checking]
+# TC001-003 move a typing-only import behind TYPE_CHECKING. Classes and
+# functions whose annotations a library reads at runtime are exempt only if
+# listed here. Both lists default to empty.
+# ← EDIT: add your own BaseModel subclasses and runtime-evaluating decorators.
+runtime-evaluated-base-classes = [
+    "pydantic.BaseModel",
+    "pydantic_settings.BaseSettings",
+]
+# ruff resolves `@app.get` / `@router.get` on instances in the same module.
+runtime-evaluated-decorators = [
+    "fastapi.FastAPI.get", "fastapi.FastAPI.post", "fastapi.FastAPI.put",
+    "fastapi.FastAPI.patch", "fastapi.FastAPI.delete",
+    "fastapi.FastAPI.websocket",
+    "fastapi.APIRouter.get", "fastapi.APIRouter.post", "fastapi.APIRouter.put",
+    "fastapi.APIRouter.patch", "fastapi.APIRouter.delete",
+    "fastapi.APIRouter.websocket",
+]
+# Blind spots: ruff sees declarations, never the call site that reads
+# annotations. With deferred annotations (py314+ or `from __future__ import
+# annotations`), it still flags a parameter type of a `Depends(dep)` function
+# and a field type of a dataclass passed to `TypeAdapter`. The fix is unsafe,
+# so check each move for these before applying it.
+
+# ── Complexity thresholds ───────────────────────────────────────────────────
+
+[lint.mccabe]
+# Cyclomatic complexity. Radon: A ≤ 5, B ≤ 10. Ruff/flake8 default: 10.
+# Counts branches, and is *blind to nesting*: a 4-deep nest of `if`s and the
+# flat guard-clause rewrite of the same logic both measure 5, so C901 cannot
+# distinguish them at any threshold. Nesting depth is a separate axis —
+# see `max-nested-blocks` below (PLR1702), the complement to this rule.
+max-complexity = 10
+
+[lint.pylint]
+# pydantic hooks, not typos: bad-dunder-method-name (PLW3201) flags them otherwise.
+allow-dunder-method-names = ["__get_pydantic_core_schema__", "__get_pydantic_json_schema__"]
+# max-args: default 5 — raise only if your domain genuinely needs it
+max-args = 5
+# max-branches: default 12
+max-branches = 12
+# max-returns: ruff/pylint default 6, wemake default 5.
+# Keep at default 6, but strive for fewer — each return is an exit path
+# the reader must track. Prefer early-return guard clauses over deep nesting,
+# but consolidate where possible.
+max-returns = 6
+# max-statements: ruff default 50 — rarely hit because C901 triggers first
+max-statements = 50
+# max-nested-blocks (PLR1702, preview — selected by name in `select`).
+# Pylint default 5 is lax enough to be effectively dead; 3 is the enforced cap.
+# This is the nesting axis C901 cannot see (see the note under [lint.mccabe]).
+# Counts *every* block type — `if`/`for`/`while`/`with`/`try` — so a plain
+# `for` + `with` + `try` + `if` I/O function already measures 4 and must be
+# extracted. That is the intended pressure: the cure is a named helper (or
+# guard clauses), not a raised threshold.
+# Flattening only fixes the *shape*. When the levels correspond to genuinely
+# different input worlds, the depth was un-modeled state — model it upstream.
+max-nested-blocks = 3
+# max-public-methods (PLR0904, preview): ruff default 20, enforced cap 10.
+# A class is a smaller unit than a file, so its interface gets no more room
+# than a file's: 10 public names.
+# A ceiling, not a target: below 10, a narrower interface is still better.
+# No decorator exception: a pydantic Settings class with many validators can
+# trip it — `# ruff: ignore[too-many-public-methods]` with a reason there, not a raised cap.
+max-public-methods = 10
+# max-locals (PLR0914, preview): ruff default 15. Tests are exempt: an
+# integration test sets up many real collaborators.
+max-locals = 15
+# max-bool-expr (PLR0916, preview): ruff default 5. Past 5 terms, name the
+# condition or its parts as variables.
+max-bool-expr = 5
+# max-statements-in-try (PLW0717, preview): ruff default 5. A `try` without
+# `except` is not counted, so cleanup in `finally` stays free.
+max-statements-in-try = 5
+
+# ── Format settings ─────────────────────────────────────────────────────────
+
+[format]
+# Format code examples in docstrings (`>>>` doctests, Markdown and reST code
+# blocks) like the code around them, so the examples cannot drift from the
+# project's style. Ruff skips an example that is not valid Python.
+# Cost: a hand-aligned layout inside an example, such as a table of `case`
+# arms with lined-up comments, gets reflowed. Write that example as a plain
+# text block instead.
+docstring-code-format = true
