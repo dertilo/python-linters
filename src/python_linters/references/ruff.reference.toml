@@ -396,6 +396,11 @@ ignore = [
     "unused-async",  # async test doubles mirror the awaited signature they replace
     "float-equality-comparison",  # asserting an exactly representable result is correct
     "too-many-locals",  # an integration test sets up many real collaborators
+    "missing-type-function-argument",  # pytest fixtures: the fixture defines the type
+    "missing-return-type-private-function",  # helpers and fakes local to a test module
+    "missing-return-type-special-method",  # `__init__` / `__enter__` on test doubles
+    "import-outside-top-level",  # imports inside a test patch or isolate the import
+    "private-member-access",  # tests inspect internal state on purpose
 ]
 "test_*.py" = [
     "assert",
@@ -409,6 +414,11 @@ ignore = [
     "unused-async",
     "float-equality-comparison",
     "too-many-locals",
+    "missing-type-function-argument",
+    "missing-return-type-private-function",
+    "missing-return-type-special-method",
+    "import-outside-top-level",
+    "private-member-access",
 ]
 
 # ── isort ───────────────────────────────────────────────────────────────────
