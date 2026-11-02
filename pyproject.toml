@@ -1,6 +1,6 @@
 [project]
 name = "python-linters"
-version = "0.2.0"
+version = "0.2.1"
 description = "Run ruff, ty and pymodularity on a Python project and print one JSON report grouped by rule."
 readme = "README.md"
 license = "MIT"
