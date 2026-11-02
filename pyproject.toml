@@ -9,14 +9,11 @@ authors = [{ name = "Tilo Himmelsbach" }]
 dependencies = [
     "ruff==0.17.3",
     "ty==0.0.90",
-    "pymodularity",
+    "pymodularity==0.5.0",
 ]
 
 [project.scripts]
 python-linters = "python_linters.__main__:main"
-
-[tool.uv.sources]
-pymodularity = { path = "/home/tilo/code/pymodularity", editable = true }
 
 [tool.deptry.per_rule_ignores]
 # DEP002 (unused-dependency) false positive: deptry only sees `import` statements,

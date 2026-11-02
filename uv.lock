@@ -49,16 +49,11 @@ wheels = [
 
 [[package]]
 name = "pymodularity"
-version = "0.4.0"
-source = { editable = "../../pymodularity" }
-
-[package.metadata]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "pytest" },
-    { name = "ruff" },
-    { name = "ty", specifier = "==0.0.90" },
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/3c/d9/a13a0533529722beb99053c780e192d70c7961e390a11fb29cffc3eafc88/pymodularity-0.5.0.tar.gz", hash = "sha256:6ff77d57ec2d5b0e3d882b58d575ad7186ab9d44078ae29b4b024119b122db87", size = 46880, upload-time = "2026-11-02T18:56:08.192Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/92/c4/0b42ab541fa6438ba596da5c5bc3fa1031cfe12f3a807d16614f2692b5a3/pymodularity-0.5.0-py3-none-any.whl", hash = "sha256:9219ab239bb2fd6bc1ef797621d7aebdcfde57631c99c814f294d2104e44b315", size = 59797, upload-time = "2026-11-02T18:56:06.587Z" },
 ]
 
 [[package]]
@@ -94,7 +89,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pymodularity", editable = "../../pymodularity" },
+    { name = "pymodularity", specifier = "==0.5.0" },
     { name = "ruff", specifier = "==0.17.3" },
     { name = "ty", specifier = "==0.0.90" },
 ]
