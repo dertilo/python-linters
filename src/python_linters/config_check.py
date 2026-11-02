@@ -169,7 +169,9 @@ def _covers_rule(
         return False
     if selector in meta_prefixes:
         return True
-    selector_linters = {r["linter"] for r in rules if r["code"] and r["code"].startswith(selector)}
+    selector_linters = {
+        r["linter"] for r in rules if r["code"] and r["code"].startswith(selector)
+    }
     return selector_linters == {linter}
 
 
@@ -221,9 +223,14 @@ def _get_new_categories(
     for prefix, linter in sorted(categories.items()):
         if any(_covers(k, prefix, category_linters, meta_prefixes) for k in known):
             continue
-        prefix_rules = [r for r in rules if r["code"] and r["code"].rstrip(string.digits) == prefix]
+        prefix_rules = [
+            r for r in rules if r["code"] and r["code"].rstrip(string.digits) == prefix
+        ]
         if all(
-            any(_covers_rule(k, r["code"], r["linter"], rules, meta_prefixes) for k in known)
+            any(
+                _covers_rule(k, r["code"], r["linter"], rules, meta_prefixes)
+                for k in known
+            )
             for r in prefix_rules
         ):
             continue
@@ -255,9 +262,13 @@ def check_ruff_config(toml_path: Path) -> RuffConfigCheck:
     commented = _parse_toml_comments(toml_path)
 
     known = selected | commented
-    meta_prefixes = {"PL"} | {p for p, linters in category_linters.items() if len(linters) > 1}
+    meta_prefixes = {"PL"} | {
+        p for p, linters in category_linters.items() if len(linters) > 1
+    }
 
-    new_categories = _get_new_categories(rules, categories, category_linters, known, meta_prefixes)
+    new_categories = _get_new_categories(
+        rules, categories, category_linters, known, meta_prefixes
+    )
     removed = _get_removed(rules, selected)
 
     untriaged_codeless = [n for n in _get_codeless_rules(rules) if n not in known]
@@ -293,24 +304,36 @@ def format_ruff_report(toml_path: Path, check: RuffConfigCheck) -> str:
     if check.new_categories:
         lines.append(f"NEW categories not yet triaged ({len(check.new_categories)}):")
         lines.append("  Add to select or comment out with '# excluded' in ruff.toml:\n")
-        lines.extend(f'    "{prefix}",\t# {linter}' for prefix, linter in check.new_categories)
+        lines.extend(
+            f'    "{prefix}",\t# {linter}' for prefix, linter in check.new_categories
+        )
         lines.append("")
 
     if check.removed:
-        lines.append(f"REMOVED/RENAMED categories still in select ({len(check.removed)}):")
+        lines.append(
+            f"REMOVED/RENAMED categories still in select ({len(check.removed)}):"
+        )
         lines.extend(f"    {code}" for code in check.removed)
         lines.append("")
 
     if check.untriaged_codeless:
-        lines.append(f"Code-less rules not yet triaged ({len(check.untriaged_codeless)}):")
-        lines.append("  Add to select by name or comment out with '# excluded' in ruff.toml:\n")
+        lines.append(
+            f"Code-less rules not yet triaged ({len(check.untriaged_codeless)}):"
+        )
+        lines.append(
+            "  Add to select by name or comment out with '# excluded' in ruff.toml:\n"
+        )
         lines.extend(f'    "{name}",' for name in check.untriaged_codeless)
         lines.append("")
 
     if check.untriaged_preview:
         lines.append(f"Preview rules not yet triaged ({len(check.untriaged_preview)}):")
-        lines.append("  Add to select by name or cover with an '# excluded' line in ruff.toml:\n")
-        lines.extend(f'    "{name}",\t# {code}' for code, name in check.untriaged_preview)
+        lines.append(
+            "  Add to select by name or cover with an '# excluded' line in ruff.toml:\n"
+        )
+        lines.extend(
+            f'    "{name}",\t# {code}' for code, name in check.untriaged_preview
+        )
         lines.append("")
 
     if check.is_clean:
@@ -395,7 +418,9 @@ def format_ty_report(config_path: Path, check: TyConfigCheck) -> str:
     ]
 
     if check.untriaged:
-        lines.append(f"UNTRIAGED rules ty knows that the config omits ({len(check.untriaged)}):")
+        lines.append(
+            f"UNTRIAGED rules ty knows that the config omits ({len(check.untriaged)}):"
+        )
         lines.extend(
             f'    {name} = "???"  # default: {check.default_levels[name]}'
             for name in check.untriaged
@@ -403,7 +428,9 @@ def format_ty_report(config_path: Path, check: TyConfigCheck) -> str:
         lines.append("")
 
     if check.stale:
-        lines.append(f"STALE rules named in config that ty no longer knows ({len(check.stale)}):")
+        lines.append(
+            f"STALE rules named in config that ty no longer knows ({len(check.stale)}):"
+        )
         lines.extend(f"    {name}" for name in check.stale)
         lines.append("")
 

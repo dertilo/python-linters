@@ -18,8 +18,7 @@ def _run_lint(*args: str) -> subprocess.CompletedProcess[str]:
 
 def _write_clean_project(tmp_path: Path) -> Path:
     (tmp_path / "pyproject.toml").write_text(
-        '[project]\nname = "fixture"\nversion = "0.1.0"\n'
-        'requires-python = ">=3.11"\n'
+        '[project]\nname = "fixture"\nversion = "0.1.0"\nrequires-python = ">=3.11"\n'
     )
     (tmp_path / "my_package").mkdir()
     (tmp_path / "my_package" / "__init__.py").write_text("")
@@ -31,8 +30,7 @@ def _write_clean_project(tmp_path: Path) -> Path:
 
 def _write_dirty_project(tmp_path: Path) -> Path:
     (tmp_path / "pyproject.toml").write_text(
-        '[project]\nname = "fixture"\nversion = "0.1.0"\n'
-        'requires-python = ">=3.11"\n'
+        '[project]\nname = "fixture"\nversion = "0.1.0"\nrequires-python = ">=3.11"\n'
     )
     (tmp_path / "my_package").mkdir()
     (tmp_path / "my_package" / "__init__.py").write_text("")
@@ -112,8 +110,7 @@ def test_lint_ty_ignores_a_foreign_virtual_env(tmp_path: Path) -> None:
     project = tmp_path / "project"
     project.mkdir()
     (project / "pyproject.toml").write_text(
-        '[project]\nname = "fixture"\nversion = "0.1.0"\n'
-        'requires-python = ">=3.11"\n'
+        '[project]\nname = "fixture"\nversion = "0.1.0"\nrequires-python = ">=3.11"\n'
     )
     package_dir = project / "typed_package"
     package_dir.mkdir()

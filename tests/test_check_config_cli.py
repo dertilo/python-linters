@@ -25,7 +25,9 @@ def _reference_path(tool: str) -> Path:
     filename = {"ruff": "ruff.reference.toml", "ty": "ty.reference.toml"}[tool]
     # python-linters always ships as a real filesystem package (never a
     # zipped wheel on sys.path), so this Traversable is always a real Path.
-    return Path(str(importlib.resources.files("python_linters.references").joinpath(filename)))
+    return Path(
+        str(importlib.resources.files("python_linters.references").joinpath(filename))
+    )
 
 
 def test_check_config_ruff_reference_is_clean() -> None:
@@ -42,7 +44,9 @@ def test_check_config_ty_reference_is_clean() -> None:
     assert "up to date" in result.stdout
 
 
-def test_check_config_ruff_missing_category_exits_one_and_names_it(tmp_path: Path) -> None:
+def test_check_config_ruff_missing_category_exits_one_and_names_it(
+    tmp_path: Path,
+) -> None:
     content = _reference_path("ruff").read_text()
     line = '    "PD",    # pandas-vet — common pandas antipatterns\n'
     assert line in content
@@ -68,8 +72,10 @@ def test_check_config_ty_missing_rule_exits_one_and_names_it(tmp_path: Path) -> 
     assert "redundant-cast" in result.stdout
 
 
-def test_check_config_single_letter_prefix_does_not_cover_other_linter(tmp_path: Path) -> None:
-    """"N" (pep8-naming) must not be read as covering "NPY" (NumPy) just
+def test_check_config_single_letter_prefix_does_not_cover_other_linter(
+    tmp_path: Path,
+) -> None:
+    """ "N" (pep8-naming) must not be read as covering "NPY" (NumPy) just
     because "NPY" starts with "N": they are different linters."""
     content = _reference_path("ruff").read_text()
     line = '    "NPY",   # NumPy-specific rules — deprecated NumPy aliases\n'

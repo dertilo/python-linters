@@ -61,7 +61,12 @@ class Location:
     message: str
 
     def to_dict(self) -> dict[str, object]:
-        return {"file": self.file, "line": self.line, "col": self.col, "message": self.message}
+        return {
+            "file": self.file,
+            "line": self.line,
+            "col": self.col,
+            "message": self.message,
+        }
 
 
 @dataclass
@@ -123,7 +128,16 @@ def run_ruff(project_path: Path) -> dict[str, FindingGroup]:
     # selector, bad config, ...). Empty stdout on exit 2 must never read
     # as "0 findings" — `run_checked` raises instead of returning in that case.
     result = run_checked(
-        [sys.executable, "-m", "ruff", "check", "--no-cache", "--output-format", "json", "."],
+        [
+            sys.executable,
+            "-m",
+            "ruff",
+            "check",
+            "--no-cache",
+            "--output-format",
+            "json",
+            ".",
+        ],
         project_path,
         "ruff",
         ok_codes=(0, 1),
@@ -226,8 +240,15 @@ def run_pymodularity(project_path: Path) -> dict[str, FindingGroup]:
     # 2 `uv` missing or an uncaught exception (docs/rules.md "JSON output").
     # A failure must never read as "0 findings".
     result = run_checked(
-        [sys.executable, "-m", "pymodularity", "check", "--output-format", "json",
-         str(project_path)],
+        [
+            sys.executable,
+            "-m",
+            "pymodularity",
+            "check",
+            "--output-format",
+            "json",
+            str(project_path),
+        ],
         project_path,
         "pymodularity",
         ok_codes=(0, 1),
@@ -259,7 +280,11 @@ def build_report(project_path: Path) -> tuple[dict[str, object], int]:
     sections: dict[str, object] = {}
     grand_total = 0
 
-    for tool, run in (("ruff", run_ruff), ("ty", run_ty), ("pymodularity", run_pymodularity)):
+    for tool, run in (
+        ("ruff", run_ruff),
+        ("ty", run_ty),
+        ("pymodularity", run_pymodularity),
+    ):
         print(f"Running {tool} on {project_path} ...", file=sys.stderr)
         violations = run(project_path)
         total = sum(group.count for group in violations.values())
