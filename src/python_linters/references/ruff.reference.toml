@@ -321,9 +321,9 @@ ignore = [
     # ANN401 (typing.Any disallowed) stays ON: with basedpyright dropped
     # in favor of ty, ANN401 is the gate's only coverage for explicit
     # Any (basedpyright's reportExplicitAny): ty has no equivalent rule.
-    # missing return type on __init__, __enter__, __exit__ — always obvious
-    # from context
-    "missing-return-type-special-method",
+    # missing-return-type-special-method stays ON: ty types the target of
+    # `with X() as x` as Unknown when `__enter__` has no return type. ruff
+    # fixes `__init__ -> None` and `__str__ -> str` itself (safe fix).
     "missing-type-args",  # missing type on *args — typically pass-through,
                           #   type depends on caller
     "missing-type-kwargs",  # missing type on **kwargs — same reasoning as
@@ -339,18 +339,18 @@ ignore = [
                               #   than max_snr
 
     # ── Code style ──
-    "lambda-assignment",  # `transform = lambda x: x.strip()` is sometimes
-                          #   clearer than a named function for one-off local
-                          #   transforms
+    # lambda-assignment stays ON: a lambda cannot annotate its parameters,
+    # so ty types `strip = lambda x: x.strip()` as `(x) -> Unknown` and
+    # accepts `strip(1)`.
     "in-dict-keys",  # use `key in dict` — `key in dict.keys()` is more
                      #   explicit about intent; Python Zen says explicit >
                      #   implicit
     "superfluous-else-return",  # the else branch makes the two paths visually
                                 #   symmetric and easier to read
     "superfluous-else-raise",  # same reasoning as superfluous-else-return
-    # super() issues with dataclass(slots=True), see
-    # https://stackoverflow.com/questions/73268995
-    "super-call-with-parameters",
+    # super-call-with-parameters stays ON: zero-argument super() fails in a
+    # dataclass(slots=True) before Python 3.14, but ruff skips slots
+    # dataclasses for this rule (checked on ruff 0.17.3).
     "compare-to-empty-string",  # `s == ""` is more explicit than `not s` (the
                                 #   latter also matches None, 0, [])
 
