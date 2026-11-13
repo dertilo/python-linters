@@ -13,9 +13,9 @@ uv add --dev python-linters
 
 ## Commands
 
-- `uv run python-linters lint [path] [--out FILE]` — runs ruff, ty and
-  pymodularity (default path: `.`) and prints the merged JSON report to
-  stdout, or writes it to `FILE` with `--out`.
+- `uv run python-linters lint [path] [--out FILE]` — runs ruff, `ruff
+  format --check`, ty and pymodularity (default path: `.`) and prints the
+  merged JSON report to stdout, or writes it to `FILE` with `--out`.
 - `uv run python-linters reference ruff|ty` — prints this package's shipped
   reference config for the given tool to stdout. The package never writes
   it into your project — copying it into `ruff.toml`/`ty.toml` (or

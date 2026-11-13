@@ -1,4 +1,4 @@
-"""Run ruff, ty and pymodularity and group their findings by rule.
+"""Run ruff, ruff format --check, ty and pymodularity and group their findings by rule.
 
 Ported from lint_grouped.py (quality-and-security-tools howtos), minus eslint.
 
@@ -7,6 +7,7 @@ Output structure:
       "project": "/abs/path",
       "summary": {
         "ruff":        {"total": 100, "rules": 12},
+        "ruff-format": {"total": 2,   "rules": 1},
         "ty":          {"total": 50,  "rules": 8},
         "pymodularity": {"total": 5,  "rules": 2}
       },
@@ -15,6 +16,12 @@ Output structure:
           "url":       "https://docs.astral.sh/ruff/rules/...",
           "count":     42,
           "locations": [{"file": "rel/path.py", "line": 12, "col": 5, "message": "..."}, ...]
+        }
+      },
+      "ruff-format": {
+        "unformatted": {
+          "count":     2,
+          "locations": [{"file": "rel/path.py", "line": 1, "col": 1, "message": "would be reformatted"}, ...]
         }
       },
       "ty": {
@@ -40,17 +47,22 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from python_linters.tool_errors import run_checked
+from python_linters.tool_errors import ToolFailedError, run_checked
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
 
 _TY_SEVERITY_MAP = {"major": "error", "minor": "warning", "info": "info"}
+
+# Matches ruff format --check's per-file location line, e.g.:
+#  --> my_package/main_module.py:1:2
+_RUFF_FORMAT_LOCATION_RE = re.compile(r"^ --> (?P<file>.+):(?P<line>\d+):(?P<col>\d+)$")
 
 
 @dataclass
@@ -159,6 +171,53 @@ def run_ruff(project_path: Path) -> dict[str, FindingGroup]:
             yield code, d.get("url", ""), None, location
 
     return _group_findings(findings())
+
+
+def run_ruff_format(project_path: Path) -> dict[str, FindingGroup]:
+    # Resolution: same as run_ruff above — `sys.executable -m ruff`, never
+    # PATH, `--no-cache` so a read-only linted project tree is never an
+    # issue.
+    #
+    # `ruff format --check` has no JSON output mode (unlike `ruff check`):
+    # `ruff format --help` lists `--output-format` only under `check`, not
+    # under `format`. Its human-readable stdout does carry one `-->
+    # path:line:col` line per unformatted file, which is parsed below
+    # instead.
+    #
+    # ruff format's exit codes: 0 all formatted, 1 some file would be
+    # reformatted, 2 tool failure (bad config, crash, ...). A failure must
+    # never read as "0 findings" — `run_checked` raises instead of
+    # returning in that case.
+    result = run_checked(
+        [sys.executable, "-m", "ruff", "format", "--check", "--no-cache", "."],
+        project_path,
+        "ruff-format",
+        ok_codes=(0, 1),
+    )
+    if not result.stdout.strip():
+        return {}
+
+    def findings() -> Iterable[_Finding]:
+        for line in result.stdout.splitlines():
+            match = _RUFF_FORMAT_LOCATION_RE.match(line)
+            if match is None:
+                continue
+            location = Location(
+                file=_relative_to(match["file"], project_path),
+                line=int(match["line"]),
+                col=int(match["col"]),
+                message="would be reformatted",
+            )
+            yield "unformatted", None, None, location
+
+    groups = _group_findings(findings())
+    # Exit 1 with nothing parsed means ruff changed its text output: fail
+    # loudly instead of reporting a clean project.
+    if result.returncode == 1 and not groups:
+        detail = f"exit 1 but no ' --> path:line:col' line parsed:\n{result.stdout}"
+        tool = "ruff-format"
+        raise ToolFailedError(tool, detail)
+    return groups
 
 
 def run_ty(project_path: Path) -> dict[str, FindingGroup]:
@@ -282,6 +341,7 @@ def build_report(project_path: Path) -> tuple[dict[str, object], int]:
 
     for tool, run in (
         ("ruff", run_ruff),
+        ("ruff-format", run_ruff_format),
         ("ty", run_ty),
         ("pymodularity", run_pymodularity),
     ):

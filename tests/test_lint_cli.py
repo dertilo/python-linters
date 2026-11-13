@@ -23,7 +23,7 @@ def _write_clean_project(tmp_path: Path) -> Path:
     (tmp_path / "my_package").mkdir()
     (tmp_path / "my_package" / "__init__.py").write_text("")
     (tmp_path / "my_package" / "main_module.py").write_text(
-        "def greet_person(name: str) -> str:\n    return f'hello {name}'\n"
+        'def greet_person(name: str) -> str:\n    return f"hello {name}"\n'
     )
     return tmp_path
 
@@ -50,6 +50,7 @@ def test_lint_clean_project_exits_zero(tmp_path: Path) -> None:
     report = json.loads(result.stdout)
     assert report["project"] == str(project)
     assert report["summary"]["ruff"]["total"] == 0
+    assert report["summary"]["ruff-format"]["total"] == 0
     assert report["summary"]["ty"]["total"] == 0
     assert "pymodularity" in report["summary"]
 
@@ -75,6 +76,25 @@ def test_lint_dirty_project_exits_one_and_groups_by_rule(tmp_path: Path) -> None
     # ty's groups carry a severity instead of a url
     ty_rules = report["ty"]
     assert all("severity" in group for group in ty_rules.values())
+
+
+def test_lint_unformatted_file_is_flagged(tmp_path: Path) -> None:
+    project = _write_clean_project(tmp_path)
+    (project / "my_package" / "main_module.py").write_text(
+        "def greet_person(name:str)->str:\n    return f'hello {name}'\n"
+    )
+
+    result = _run_lint(str(project))
+
+    assert result.returncode == 1, result.stderr
+    report = json.loads(result.stdout)
+    assert report["summary"]["ruff-format"]["total"] == 1
+    format_rules = report["ruff-format"]
+    assert "unformatted" in format_rules
+    assert format_rules["unformatted"]["count"] == 1
+    assert format_rules["unformatted"]["locations"][0]["file"] == (
+        "my_package/main_module.py"
+    )
 
 
 def test_lint_defaults_path_to_cwd(tmp_path: Path) -> None:
