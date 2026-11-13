@@ -132,7 +132,7 @@ def run_ruff(project_path: Path) -> dict[str, FindingGroup]:
     # Resolution: the python-linters environment's own pinned ruff, run as
     # `sys.executable -m ruff` so it never falls through to PATH. In
     # dev-dependency mode that environment is the linted project's venv, so
-    # ruff==0.17.3 (pinned in python-linters' own pyproject.toml) is what
+    # ruff==0.17.5 (pinned in python-linters' own pyproject.toml) is what
     # actually runs — never a PATH ruff of another version, which lints
     # with other rules and may refuse the reference config.
     #

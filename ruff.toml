@@ -12,7 +12,7 @@
 #   5. flake8-type-checking — list your runtime-evaluated base classes and
 #                           decorators (pydantic, FastAPI preset)
 #
-# Last triaged against: ruff 0.17.3
+# Last triaged against: ruff 0.17.5
 # Rule names in `select`/`ignore` and in `# ruff: ignore[...]` comments need
 # `preview = true`: without it ruff rejects the config and treats name-based
 # suppression comments as inert.
@@ -20,7 +20,7 @@
 
 # Older ruff fails on the first rule name it does not know, with a cryptic
 # `Unknown rule selector`. This guard names the version instead.
-required-version = ">=0.17.3"
+required-version = ">=0.17.5"
 
 target-version = "py311"
 
@@ -94,6 +94,8 @@ select = [
 
     # ── Security ──
     "S",     # flake8-bandit — security antipatterns (hardcoded passwords, exec, …)
+    "tarfile-ignore-zeros-true",  # code-less rule: `ignore_zeros=True` reads past the
+                                  #   end-of-archive marker, so appended members get extracted too
     "EXE",   # flake8-executable — shebang correctness
 
     # ── Error handling ──
@@ -170,11 +172,11 @@ select = [
 
     # ── Preview rules, selected by name ──────────────────────────────────
     # `explicit-preview-rules = true`: a category select above turns on only its
-    # stable rules. Each preview rule below was triaged on ruff 0.17.3.
+    # stable rules. Each preview rule below was triaged on ruff 0.17.5.
     # A preview rule in a selected category that is neither listed
     # here nor covered by an `# excluded` line below is untriaged.
 
-    # Ruff-specific (25)
+    # Ruff-specific (26)
     # bugs: the code runs but does the wrong thing
     "missing-f-string-syntax",          # `"{x}"` without `f` prints the braces
     "unraw-re-pattern",                 # `"\b"` in a non-raw pattern is a backspace, not a word boundary, and nothing else warns
@@ -204,13 +206,15 @@ select = [
     "noqa-comments",
     "rule-codes-in-suppression-comments",
     "rule-codes-in-selectors",
+    "renamed-rule",                     # a config selector that only works through a rename redirect
 
-    # Pylint (18)
+    # Pylint (19)
     # bugs: runtime errors or silently lost behavior
     "dict-iter-missing-items",          # `for k, v in d` unpacks keys, not items
     "modified-iterating-set",           # RuntimeError
     "redefined-slots-in-subclass",      # makes the base class slot unreachable
     "bad-dunder-method-name",           # a misspelled dunder is never called
+    "no-method-argument",               # a method without `self`/`cls` raises TypeError when called on an instance
     "unspecified-encoding",             # `open()` without encoding uses the platform locale
     # size and nesting limits, every threshold set under [lint.pylint]
     "too-many-public-methods",
@@ -262,9 +266,11 @@ select = [
     "deprecated-abc-decorator",         # deprecated since 3.3
     "context-manager-iterator",         # @contextmanager needs Generator, Iterator lacks `throw`
 
-    # flake8-async (1): a context manager's cleanup is delayed until the
-    # generator closes, when `await` is no longer allowed
-    "yield-in-context-manager-in-async-generator",
+    # flake8-async (2)
+    "yield-in-context-manager-in-async-generator",  # the context manager's cleanup waits until
+                                                    #   the generator closes, when `await` is no longer allowed
+    "pytest-raises-exception-group",  # `pytest.RaisesGroup` checks the grouped exceptions,
+                                      #   `pytest.raises(ExceptionGroup)` only the wrapper
 
     # flake8-pytest-style (1): `pytest.warns()` without a warning fails at runtime
     "pytest-warns-without-warning",
@@ -391,7 +397,7 @@ ignore = [
                                 #   callers, so its method count is not an
                                 #   interface
     # missing return type — test functions always return None
-    "missing-return-type-undocumented-public-function",
+    "missing-return-type-public-function",
     "import-private-name",  # testing internal functions is legitimate
     "unused-async",  # async test doubles mirror the awaited signature they replace
     "float-equality-comparison",  # asserting an exactly representable result is correct
@@ -408,7 +414,7 @@ ignore = [
     "magic-value-comparison",
     "no-self-use",
     "too-many-public-methods",
-    "missing-return-type-undocumented-public-function",
+    "missing-return-type-public-function",
     "implicit-namespace-package",  # standalone test scripts
     "import-private-name",
     "unused-async",
