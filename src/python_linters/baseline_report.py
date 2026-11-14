@@ -1,8 +1,7 @@
 """`lint --baseline REF`: report only findings new since a git ref.
 
-Ported from lint_python.py (quality-and-security-tools howtos), lines
-170-340 — minus semgrep, which lives only in that script and keeps its own
-baseline handling there.
+Ported from the baseline mode of the semgrep-wrapping gate script, minus
+semgrep.
 
 Mechanism:
 1. Resolve *ref* to a SHA with `git rev-parse --verify` (a bad ref, or a
@@ -10,7 +9,7 @@ Mechanism:
 2. Lint the current tree first, so its resolved ty environment is known.
 3. Check out that SHA into a fresh `git worktree add --detach` scratch
    directory — never a reused directory, which can carry stale files from
-   an earlier run (see the feedback this ports).
+   an earlier run.
 4. Lint the same sub-path inside the worktree, with the same `--skip` set.
    ty's `.venv` discovery has nothing to find in a fresh worktree, so the
    baseline run gets `--python` forwarded explicitly: the caller's own
