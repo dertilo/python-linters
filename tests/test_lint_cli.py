@@ -169,3 +169,111 @@ def test_lint_missing_path_exits_two(tmp_path: Path) -> None:
 
     assert result.returncode == 2
     assert "does not exist" in result.stderr
+
+
+def test_lint_extra_search_path_resolves_an_import(tmp_path: Path) -> None:
+    """`--extra-search-path` must reach `ty check` verbatim: a module that
+    exists only in a directory outside both the project and any venv is an
+    unresolved import without the flag, and resolved with it.
+    """
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "pyproject.toml").write_text(
+        '[project]\nname = "fixture"\nversion = "0.1.0"\nrequires-python = ">=3.11"\n'
+    )
+    package_dir = project / "ros_package"
+    package_dir.mkdir()
+    (package_dir / "__init__.py").write_text("")
+    (package_dir / "main_module.py").write_text(
+        "import external_dependency\n\nprint(external_dependency.VALUE)\n"
+    )
+
+    external_dir = tmp_path / "external"
+    external_dir.mkdir()
+    (external_dir / "external_dependency.py").write_text("VALUE = 1\n")
+
+    without_flag = _run_lint(str(project))
+    report_without = json.loads(without_flag.stdout)
+    assert report_without["summary"]["ty"]["total"] > 0, without_flag.stdout
+
+    with_flag = _run_lint(str(project), "--extra-search-path", str(external_dir))
+    report_with = json.loads(with_flag.stdout)
+    assert report_with["summary"]["ty"]["total"] == 0, with_flag.stdout
+
+
+def test_lint_reports_ty_environment(tmp_path: Path) -> None:
+    project = _write_clean_project(tmp_path)
+
+    result = _run_lint(str(project))
+
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    ty_environment = report["ty-environment"]
+    assert ty_environment["project_root"] == str(project)
+    assert ty_environment["python_environment"]
+
+
+def test_lint_skip_removes_tool_and_lists_it(tmp_path: Path) -> None:
+    project = _write_clean_project(tmp_path)
+
+    result = _run_lint(str(project), "--skip", "ty", "--skip", "pymodularity")
+
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert report["skipped"] == ["pymodularity", "ty"]
+    assert "ty" not in report["summary"]
+    assert "pymodularity" not in report["summary"]
+    assert "ty" not in report
+    assert "pymodularity" not in report
+    assert "ty-environment" not in report
+    assert "ruff" in report["summary"]
+
+
+def test_lint_skip_all_tools_is_an_error(tmp_path: Path) -> None:
+    project = _write_clean_project(tmp_path)
+
+    result = _run_lint(
+        str(project),
+        "--skip",
+        "ruff",
+        "--skip",
+        "ruff-format",
+        "--skip",
+        "ty",
+        "--skip",
+        "pymodularity",
+    )
+
+    assert result.returncode == 2
+    assert "--skip" in result.stderr
+
+
+def test_lint_reports_tool_versions(tmp_path: Path) -> None:
+    project = _write_clean_project(tmp_path)
+
+    result = _run_lint(str(project))
+
+    assert result.returncode == 0, result.stderr
+    report = json.loads(result.stdout)
+    assert set(report["tools"]) == {"ruff", "ty", "pymodularity"}
+    assert all(isinstance(v, str) and v for v in report["tools"].values())
+
+
+def test_lint_format_text_prints_one_line_per_finding(tmp_path: Path) -> None:
+    project = _write_clean_project(tmp_path)
+    (project / "my_package" / "main_module.py").write_text(
+        "def greet_person(name:str)->str:\n    return f'hello {name}'\n"
+    )
+
+    result = _run_lint(
+        str(project), "--format", "text", "--skip", "ty", "--skip", "pymodularity"
+    )
+
+    assert result.returncode == 1, result.stderr
+    lines = result.stdout.splitlines()
+    assert (
+        lines[0]
+        == "my_package/main_module.py:1:23 ruff-format/unformatted would be reformatted"
+    )
+    assert lines[-1].startswith("ruff=0 ruff-format=1")
+    assert "total=1" in lines[-1]

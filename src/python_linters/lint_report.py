@@ -5,6 +5,13 @@ Ported from lint_grouped.py (quality-and-security-tools howtos), minus eslint.
 Output structure:
     {
       "project": "/abs/path",
+      "tools": {"ruff": "0.17.5", "ty": "0.0.103", "pymodularity": "0.5.0"},
+      "skipped": ["pymodularity"],
+      "ty-environment": {
+        "project_root": "/abs/path",
+        "python_environment": "/abs/path/.venv",
+        "pythonpath": "/abs/legacy-copy"
+      },
       "summary": {
         "ruff":        {"total": 100, "rules": 12},
         "ruff-format": {"total": 2,   "rules": 1},
@@ -41,6 +48,10 @@ Output structure:
     }
 
 Rules are sorted by count (descending) so the most common issues come first.
+
+`ty-environment` is present only when ty itself ran (absent if "ty" is in
+`skipped`); its `pythonpath` key is present only when `PYTHONPATH` was set.
+A skipped tool gets no `summary` entry and no section of its own.
 """
 
 from __future__ import annotations
@@ -54,6 +65,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from python_linters.tool_errors import ToolFailedError, run_checked
+from python_linters.tool_versions import tool_versions
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -63,6 +75,24 @@ _TY_SEVERITY_MAP = {"major": "error", "minor": "warning", "info": "info"}
 # Matches ruff format --check's per-file location line, e.g.:
 #  --> my_package/main_module.py:1:2
 _RUFF_FORMAT_LOCATION_RE = re.compile(r"^ --> (?P<file>.+):(?P<line>\d+):(?P<col>\d+)$")
+
+# `ty check -vv`'s DEBUG lines that name the project root it resolved.
+# "Found project at" fires when the root differs from (or has its own
+# `tool.ty` config at) the searched path; "Project without `tool.ty`
+# section" fires when ty found no config and settled on the searched path
+# itself. Either line, found first, names the actual root.
+_TY_FOUND_PROJECT_RE = re.compile(r"Found project at '(?P<root>[^']+)'")
+_TY_PROJECT_WITHOUT_CONFIG_RE = re.compile(
+    r"Project without `tool\.ty` section: '(?P<root>[^']+)'"
+)
+
+# `ty check -vv`'s DEBUG line that names the sys.prefix of the Python
+# environment it actually resolved for import resolution — the same line
+# fires whether that environment came from VIRTUAL_ENV, a discovered
+# `.venv`, or an explicit `--python`.
+_TY_SYS_PREFIX_RE = re.compile(
+    r"Searching for site-packages directory in sys\.prefix (?P<prefix>\S+)"
+)
 
 
 @dataclass
@@ -220,7 +250,49 @@ def run_ruff_format(project_path: Path) -> dict[str, FindingGroup]:
     return groups
 
 
-def run_ty(project_path: Path) -> dict[str, FindingGroup]:
+def _parse_ty_environment(stderr: str) -> dict[str, str]:
+    """Pull ty's resolved project root and Python environment out of its
+    `-vv` DEBUG log lines.
+
+    ty prints no structured ("--output-format json"-style) way to ask for
+    this, so the log lines are the only source. Both a project root line
+    and a sys.prefix line are expected on every run (see the regex
+    docstrings above) — their absence means ty changed its logging, so
+    this fails loudly instead of reporting a guessed or stale environment.
+    """
+    environment: dict[str, str] = {}
+
+    root_match = _TY_FOUND_PROJECT_RE.search(
+        stderr
+    ) or _TY_PROJECT_WITHOUT_CONFIG_RE.search(stderr)
+    if root_match is None:
+        tool = "ty"
+        detail = f"-vv output named no project root; ty may have changed its logging:\n{stderr}"
+        raise ToolFailedError(tool, detail)
+    environment["project_root"] = root_match["root"]
+
+    prefix_match = _TY_SYS_PREFIX_RE.search(stderr)
+    if prefix_match is None:
+        tool = "ty"
+        detail = (
+            "-vv output named no resolved Python environment; ty may have "
+            f"changed its logging:\n{stderr}"
+        )
+        raise ToolFailedError(tool, detail)
+    environment["python_environment"] = prefix_match["prefix"]
+
+    pythonpath = os.environ.get("PYTHONPATH", "")
+    if pythonpath != "":
+        environment["pythonpath"] = pythonpath
+
+    return environment
+
+
+def run_ty(
+    project_path: Path,
+    python: str | None = None,
+    extra_search_paths: tuple[str, ...] = (),
+) -> tuple[dict[str, FindingGroup], dict[str, str]]:
     # Resolution: `sys.executable -m ty` from the python-linters
     # environment, never a bare `ty` entry point (that one falls through to
     # PATH when the environment has no ty on it) and never a PATH `ty`.
@@ -247,16 +319,35 @@ def run_ty(project_path: Path) -> dict[str, FindingGroup]:
     # VIRTUAL_ENV here makes ty fall through to discovering `.venv` under
     # project_path itself. In dev-dependency mode this is a no-op: there
     # the project's own venv was VIRTUAL_ENV already.
+    #
+    # `--python`/`--extra-search-path` let a caller override this
+    # discovery outright — needed e.g. for a ROS 2 package that resolves
+    # its imports from a system interpreter and `/opt/ros/...`, never a
+    # `.venv` under the linted path.
+    #
+    # `-vv`: only source for ty's resolved project root and Python
+    # environment (see `_parse_ty_environment`). Its DEBUG lines go to
+    # stderr, never stdout, so the `--output-format gitlab` JSON below is
+    # unaffected.
     ty_env = {k: v for k, v in os.environ.items() if k != "VIRTUAL_ENV"}
+    cmd = [sys.executable, "-m", "ty", "check", "--output-format", "gitlab", "-vv"]
+    if python is not None:
+        cmd += ["--python", python]
+    for search_path in extra_search_paths:
+        cmd += ["--extra-search-path", search_path]
+    cmd.append(".")
+
     result = run_checked(
-        [sys.executable, "-m", "ty", "check", "--output-format", "gitlab", "."],
+        cmd,
         project_path,
         "ty",
         ok_codes=(0, 1),
         env=ty_env,
     )
+    ty_environment = _parse_ty_environment(result.stderr)
+
     if not result.stdout.strip():
-        return {}
+        return {}, ty_environment
 
     diagnostics = json.loads(result.stdout)
 
@@ -287,7 +378,7 @@ def run_ty(project_path: Path) -> dict[str, FindingGroup]:
             )
             yield rule, None, severity, location
 
-    return _group_findings(findings())
+    return _group_findings(findings()), ty_environment
 
 
 def run_pymodularity(project_path: Path) -> dict[str, FindingGroup]:
@@ -333,20 +424,38 @@ def run_pymodularity(project_path: Path) -> dict[str, FindingGroup]:
     return _group_findings(findings())
 
 
-def build_report(project_path: Path) -> tuple[dict[str, object], int]:
+# The 4 tools `lint` can run, in report order. Shared with the CLI's
+# `--skip` choices so the two never drift apart.
+TOOL_NAMES = ("ruff", "ruff-format", "ty", "pymodularity")
+
+
+def build_report(
+    project_path: Path,
+    skip: frozenset[str] = frozenset(),
+    ty_python: str | None = None,
+    ty_extra_search_paths: tuple[str, ...] = (),
+) -> tuple[dict[str, object], int]:
     """Return the JSON-ready report and the total finding count across all tools."""
     summary: dict[str, object] = {}
     sections: dict[str, object] = {}
     grand_total = 0
+    ty_environment: dict[str, str] = {}
 
-    for tool, run in (
-        ("ruff", run_ruff),
-        ("ruff-format", run_ruff_format),
-        ("ty", run_ty),
-        ("pymodularity", run_pymodularity),
-    ):
+    for tool in TOOL_NAMES:
+        if tool in skip:
+            continue
+
         print(f"Running {tool} on {project_path} ...", file=sys.stderr)
-        violations = run(project_path)
+        if tool == "ruff":
+            violations = run_ruff(project_path)
+        elif tool == "ruff-format":
+            violations = run_ruff_format(project_path)
+        elif tool == "ty":
+            violations, ty_environment = run_ty(
+                project_path, python=ty_python, extra_search_paths=ty_extra_search_paths
+            )
+        else:
+            violations = run_pymodularity(project_path)
         total = sum(group.count for group in violations.values())
         print(f"  {total} violations across {len(violations)} rules", file=sys.stderr)
 
@@ -354,5 +463,13 @@ def build_report(project_path: Path) -> tuple[dict[str, object], int]:
         sections[tool] = {rule: group.to_dict() for rule, group in violations.items()}
         grand_total += total
 
-    report = {"project": str(project_path), "summary": summary, **sections}
+    report: dict[str, object] = {
+        "project": str(project_path),
+        "tools": tool_versions(),
+        "skipped": sorted(skip),
+    }
+    if ty_environment:
+        report["ty-environment"] = ty_environment
+    report["summary"] = summary
+    report.update(sections)
     return report, grand_total
