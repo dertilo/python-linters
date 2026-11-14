@@ -43,6 +43,12 @@ def format_text_report(report: dict[str, object]) -> str:
     )
     totals = " ".join(f"{tool}={data['total']}" for tool, data in summary.items())
     grand_total = sum(data["total"] for data in summary.values())
-    lines.append(f"{totals} total={grand_total}" if totals else f"total={grand_total}")
+    totals_line = f"{totals} total={grand_total}" if totals else f"total={grand_total}"
+
+    baseline = report.get("baseline")
+    if isinstance(baseline, dict):
+        totals_line += f" baseline={baseline['ref']}"
+
+    lines.append(totals_line)
 
     return "\n".join(lines)

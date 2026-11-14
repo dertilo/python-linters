@@ -14,7 +14,8 @@ uv add --dev python-linters
 ## Commands
 
 - `uv run python-linters lint [path] [--out FILE] [--format json|text]
-  [--skip TOOL]... [--python PATH] [--extra-search-path DIR]...` — runs
+  [--skip TOOL]... [--python PATH] [--extra-search-path DIR]...
+  [--baseline REF]` — runs
   ruff, `ruff format --check`, ty and pymodularity (default path: `.`) and
   prints the merged report to stdout, or writes it to `FILE` with `--out`.
   - `--format text` prints one line per finding (`file:line:col
@@ -43,6 +44,33 @@ uv add --dev python-linters
   - the report's top-level `"tools"` key names the bundled ruff/ty/
     pymodularity versions; `"ty-environment"` names ty's resolved project
     root and Python environment (absent if `ty` is skipped).
+  - `--baseline REF` (a branch, tag, SHA, `HEAD~N`, ...) reports only
+    findings that are new since that git ref: it checks the ref out into a
+    fresh `git worktree add --detach` scratch directory (never a reused
+    one — a stale copy there can carry findings from an earlier run),
+    lints the same sub-path there, and drops every current finding whose
+    `(file, rule, message)` triple already exists at the baseline. The
+    line number is excluded from that triple on purpose: a finding does
+    not become "new" just because a line was inserted above it. The
+    worktree is removed afterwards regardless of outcome. A ref that
+    doesn't resolve, or a `path` outside any git repo, exits 2 with the
+    reason on stderr. The report gets a top-level `"baseline": {"ref":
+    ..., "sha": ...}`; the summary and exit code count only the new
+    findings; `--format text` prints only the new findings plus the
+    baseline ref on the totals line. Since a fresh worktree has no
+    `.venv` of its own, the baseline's ty run is given `--python`
+    explicitly — the current run's resolved `ty-environment` Python
+    environment, unless you passed your own `--python` — and the report
+    names which one it used under `"baseline"`'s `"ty-python"` key.
+    `--skip` and `--extra-search-path` apply to both runs.
+  - **File-move artifact in the delta.** The baseline keys findings by
+    `(file, rule, message)`. A refactor that moves code from `old/x.py`
+    to `new/y.py` reports the entry at `old/x.py` as *gone* and the same
+    finding at `new/y.py` as *new* — net delta +1 even though the
+    codebase's lint posture is unchanged. Two responses: (a) accept the
+    +1 and document the move in the commit message; (b) commit and
+    refresh the baseline. Prefer (a) for one-off moves; (b) only when a
+    move is large enough to otherwise swamp the real new findings.
 - `uv run python-linters --version` — prints this package's version and
   the bundled ruff/ty/pymodularity versions on one line.
 - `uv run python-linters reference ruff|ty` — prints this package's shipped
@@ -57,7 +85,9 @@ uv add --dev python-linters
 
 ## Exit codes
 
-- `lint`: 0 clean, 1 findings, 2 any tool failure (named on stderr) or a
-  usage error (e.g. `--skip` naming all 4 tools).
+- `lint`: 0 clean, 1 findings, 2 any tool failure (named on stderr), a
+  usage error (e.g. `--skip` naming all 4 tools), or — with
+  `--baseline` — a ref that doesn't resolve or a path outside any git
+  repo.
 - `check-config`: 0 up to date, 1 untriaged or stale rules found, 2 tool
   failure.

@@ -5,6 +5,7 @@ import json
 import sys
 from pathlib import Path
 
+from python_linters.baseline_report import BaselineError, run_with_baseline
 from python_linters.config_check import (
     check_ruff_config,
     check_ty_config,
@@ -28,13 +29,22 @@ def _lint(args: argparse.Namespace) -> int:
         return 2
 
     try:
-        output, total_findings = build_report(
-            project_path,
-            skip=frozenset(args.skip),
-            ty_python=args.ty_python,
-            ty_extra_search_paths=tuple(args.ty_extra_search_path),
-        )
-    except ToolFailedError as e:
+        if args.baseline:
+            output, total_findings = run_with_baseline(
+                project_path,
+                args.baseline,
+                skip=frozenset(args.skip),
+                ty_python=args.ty_python,
+                ty_extra_search_paths=tuple(args.ty_extra_search_path),
+            )
+        else:
+            output, total_findings = build_report(
+                project_path,
+                skip=frozenset(args.skip),
+                ty_python=args.ty_python,
+                ty_extra_search_paths=tuple(args.ty_extra_search_path),
+            )
+    except (ToolFailedError, BaselineError) as e:
         print(str(e), file=sys.stderr)
         return 2
 
@@ -129,6 +139,12 @@ def build_parser() -> argparse.ArgumentParser:
         action="append",
         default=[],
         help="forwarded verbatim as ty check's --extra-search-path (repeatable)",
+    )
+    lint_parser.add_argument(
+        "--baseline",
+        default=None,
+        help="git ref: report only findings new since this ref "
+        "(identity: file, rule, message — line excluded)",
     )
     lint_parser.set_defaults(func=_lint, parser=lint_parser)
 
